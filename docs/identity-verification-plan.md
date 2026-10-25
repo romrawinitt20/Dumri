@@ -142,3 +142,12 @@ The owner confirmed this login direction. This is a product/design decision only
 - The exact second-factor method is still undecided. Compare supported options and confirm with the owner before implementing or enabling MFA.
 - Before implementation, inspect current Supabase Auth MFA support/settings and the app's login/session flow. Keep customer phone SMS OTP behavior unchanged unless the owner separately approves a change.
 - No database, Auth configuration, Storage, RPC, or live authorization changes are authorized by this decision.
+
+
+### Owner MFA method selected (2026-10-25; design only)
+
+- The owner selected the first option: an authenticator app (for example, Google Authenticator or Microsoft Authenticator) as the second factor.
+- Planned owner sign-in: email + password, then a server-verified time-based one-time password (TOTP) challenge, before granting access to owner-only features.
+- The implementation must use Supabase-supported MFA APIs and verify the session's achieved assurance level before sensitive owner actions; a frontend-only challenge is not sufficient.
+- Enrollment, recovery codes/recovery process, lost-device handling, and whether owner access should require a fresh MFA challenge for high-risk actions must be designed and reviewed before enabling this in production.
+- This selection does not authorize changes to database schema, Auth configuration, RPCs, live permissions, or deployment. Customer SMS OTP remains unchanged.
