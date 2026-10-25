@@ -4,10 +4,11 @@ Status: **design review only**. This document does not change the Supabase datab
 
 ## Confirmed product rules
 
-- Customer: phone SMS OTP verification; customer can use customer features after phone confirmation, subject to the existing system rules.
-- Merchant: submit national ID evidence and shop information; must be reviewed and approved by an admin before merchant functions are enabled.
-- Rider: submit national ID evidence, driving licence evidence, vehicle information, and a face photo captured in the Dumri app; an admin compares the face photo with the portrait on the licence and reviews the submitted information before approving rider access.
-- No automatic face matching or liveness vendor is required for the initial version.
+- Customer: phone SMS OTP verification. Phone confirmation alone is not document verification.
+- Merchant: submit a photo of the **front of the national ID card only** and shop information; must be reviewed and approved by an admin before merchant functions are enabled.
+- Rider: submit a photo of the **front of the national ID card only**, driving-licence evidence, vehicle information, and a face photo captured in the Dumri app. An admin compares the face photo with the portrait on the driving licence and reviews the submitted information before approving rider access.
+- The app should capture the photos using the device camera, provide a preview, and allow retaking an unclear photo before submission.
+- No automatic face matching or liveness vendor is required for the initial version. Admin checks the face photo manually.
 - Phone OTP verification is not the same as document verification or role approval.
 - Do not change existing database schema until the owner reviews and confirms the design.
 
@@ -28,11 +29,11 @@ Important gaps to confirm:
 ## Proposed workflow for review
 
 1. Applicant confirms their phone using SMS OTP.
-2. Merchant applicant submits national-ID image(s) and shop details.
-3. Rider applicant submits national-ID image(s), driving-licence image(s), an in-app face photo, and vehicle details.
+2. Merchant applicant submits a front-side national-ID image and shop details.
+3. Rider applicant submits a front-side national-ID image, driving-licence image(s), an in-app face photo, and vehicle details.
 4. The app shows a clear preview and lets the applicant retake an unclear photo before submitting.
 5. The application becomes pending review. Re-submission after rejection should be possible with an admin-provided reason.
-6. An authorized admin views the private evidence, compares the rider face photo with the licence portrait, and records approve/reject plus a reason.
+6. An authorized admin views the private evidence, compares the rider face photo with the portrait on the licence, and records approve/reject plus a reason.
 7. Merchant and rider features remain blocked until the appropriate server-side approval is confirmed. A client-side screen or user-editable metadata must never grant approval.
 8. Record who reviewed the application, the decision, and timestamps in an auditable way.
 
@@ -45,20 +46,20 @@ Important gaps to confirm:
 - Use short-lived signed URLs only after an authorized access check; do not save permanent public URLs.
 - Validate file types and size, use randomized object names, and prevent applicants from overwriting approved evidence without creating a new review.
 - Minimize retention and restrict admin access. Agree a retention/deletion policy before production because national-ID images and face photos are sensitive personal data.
-- The app's camera capture can encourage taking a fresh photo, but without a liveness check it cannot guarantee that a person did not photograph a printed image or another screen.
+- Camera capture encourages a fresh photo, but without a liveness check it cannot guarantee that a person did not photograph a printed image or another screen.
 
 ## Proposed fields (not applied)
 
 Prefer a dedicated application/evidence design rather than putting image bytes or public URLs in profile rows. Candidate fields to review:
 - applicant user ID and role;
-- private Storage object path for national-ID evidence;
+- private Storage object path for front-side national-ID evidence;
 - private Storage object path for driving-licence evidence (rider only);
 - private Storage object path for in-app face photo (rider only);
 - review status: draft / submitted / needs_changes / approved / rejected;
 - submitted, reviewed, and updated timestamps;
 - reviewer user ID and decision reason.
 
-The exact table design, file requirements (front/back), RLS policies, Storage policies, admin authorization method, and retention period require inspection of the existing RPCs and security policies and owner approval before any migration.
+The exact table design, driving-licence image requirements, RLS policies, Storage policies, admin authorization method, and retention period require inspection of the existing RPCs and security policies and owner approval before any migration.
 
 ## Safety checks still required
 
