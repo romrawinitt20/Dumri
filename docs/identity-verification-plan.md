@@ -68,3 +68,28 @@ The exact table design, driving-licence image requirements, RLS policies, Storag
 - Verify the admin identity comes from trusted server-side records, not user-editable metadata.
 - Test that an applicant cannot read another applicant's files, cannot approve themselves, and cannot use merchant/rider functions while pending or rejected.
 - Run build and end-to-end tests after implementation. The current phone-OTP branch itself still needs fresh CI and real SMS-provider testing.
+
+
+## Confirmed decisions added on 2026-10-25 (still design-only)
+
+- Merchant and rider must submit either a photo of the bank passbook page or a screenshot/photo from their banking app through Dumri.
+- The single reviewer for identity and bank evidence must check that the bank account holder name matches the name on the national ID submitted by that applicant. If it does not match, the application must not be approved until the discrepancy is resolved.
+- If evidence is rejected, show the applicant the review reason and allow a corrected resubmission. The revised evidence must return to the review queue, and the decision history should be retained.
+- The platform owner needs a separate owner dashboard for business overview and admin management.
+- The owner/Super Admin can manage multiple staff admins with different permission sets. A normal user must never self-register as an admin. Admin accounts and privileges must be granted only through trusted system-side setup/authorization.
+- Keep database and live authorization changes on hold until the owner has reviewed and approved the detailed design.
+
+## Additional read-only inspection findings (2026-10-25)
+
+- The current database already has `admin_profiles`, owner-management RPCs (including `fn_owner_list_admins`, `fn_owner_upsert_admin`, `fn_owner_revoke_admin`) and an admin-access audit table. This suggests an owner/staff permission model already exists in part; it must be reviewed and reused where safe rather than creating a competing design.
+- The current owner check in `fn_assert_owner()` uses the existing user ID `1` as well as an active `admin_profiles` row with `admin_level = 'owner'`. Confirm the intended owner-account setup and recovery procedure before relying on it in the UI.
+- The existing `fn_owner_upsert_admin()` only permits a fixed list of permission keys. The frontend must match that allowlist and must not assume all admin roles have identical powers.
+- The current `fn_register_profile()` rejects `p_role = 'admin'`, but its body only explicitly checks that `auth.uid()` is non-null before inserting a profile. It does not visibly check the Auth user's phone-confirmation timestamp or that `p_phone` equals the verified Auth phone. This needs a security review before treating the RPC as a trusted registration boundary; no function was changed.
+- The current rider-profile RPC accepts bank name/account text and a national-ID number, but the reviewed schema does not establish a secure upload workflow for national-ID images, licence evidence, face photos, or bank proof images. A private evidence bucket and strict owner/admin authorization still need to be designed.
+- Current Storage inspection found a private `payment-slips` bucket, but no identity-verification evidence bucket was present in the bucket listing. Existing Storage policies allow authorized payment-slip access only; do not reuse that bucket for identity documents.
+- The read-only policy inventory found 17 public tables with RLS enabled but no table policies. Some may be intentionally RPC-only, so do not add broad policies. Review each table and its callable RPCs before deciding whether any policy is missing.
+- Security Advisor reports callable `SECURITY DEFINER` functions and disabled leaked-password protection. Each privileged RPC needs a function-by-function authorization review; do not bulk-revoke or bulk-change functions without checking callers and intended behavior.
+
+## Build status note
+
+- A CI build failed because `VerifyPhonePage.tsx` declared an unused `setPhone` state setter. The unused state declaration was removed in a code-only commit on `setup/supabase-auth-routes`; this did not change the database. A new CI result is still required to verify the fix.
