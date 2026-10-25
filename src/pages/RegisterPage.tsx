@@ -32,15 +32,17 @@ export default function RegisterPage() {
         password,
         options: {
           data: { full_name: fullName.trim(), phone: phone.trim(), role },
+          emailRedirectTo: window.location.origin,
         },
       });
       if (error) throw error;
 
-      if (data.session && data.user) {
+      if (data.session && data.user?.email_confirmed_at) {
         await ensureUserProfile(data.user);
         navigate("/dashboard", { replace: true });
       } else {
-        setSuccess(true);
+        if (data.session) await supabase.auth.signOut();
+        navigate("/verify-email", { replace: true, state: { email: email.trim() } });
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "สมัครสมาชิกไม่สำเร็จ");
@@ -59,9 +61,9 @@ export default function RegisterPage() {
         {success ? (
           <div className="notice" role="status">
             <strong>สมัครบัญชีเรียบร้อยแล้ว</strong>
-            <p>หากระบบขอให้ยืนยันอีเมล โปรดเปิดอีเมลยืนยันก่อน แล้วกลับมาเข้าสู่ระบบ ระบบจะจัดการข้อมูลโปรไฟล์ตามประเภทบัญชีที่เลือก</p>
+            <p>กรุณายืนยันอีเมลก่อนเข้าสู่ระบบและสั่งอาหาร</p>
             {role !== "customer" && <p>บัญชีร้านค้าหรือไรเดอร์จะต้องรอการตรวจสอบก่อนเริ่มใช้งานส่วนที่เกี่ยวข้อง</p>}
-            <Link to="/login">ไปหน้าเข้าสู่ระบบ</Link>
+            <Link to="/verify-email" state={{ email }}>ไปยืนยันอีเมล</Link>
           </div>
         ) : (
           <form onSubmit={submit} className="form-stack">
