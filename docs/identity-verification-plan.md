@@ -130,3 +130,15 @@ The owner explicitly chose to design a safer owner setup that does **not** grant
 - The current ID-1 owner guard remains unchanged until an approved migration is implemented.
 - Do not merge the open draft PR or apply SQL changes without explicit owner approval.
 - This plan is not yet proof that the current owner account has a configured recovery method or MFA; inspect/confirm that separately.
+
+
+## Owner login — email/password plus a second factor (2026-10-25; design only)
+
+The owner confirmed this login direction. This is a product/design decision only; it does not change the Supabase database, Auth settings, deployed functions, live permissions, or application behavior.
+
+- Owner signs in with email and password, then must complete a second-factor challenge before accessing owner-only features.
+- Owner MFA must be enforced by server-verified authentication state, not by a frontend-only screen or a user-editable profile field.
+- Owner privileges remain separate from staff-admin permissions. The existing ID-1 owner guard must not be changed until a reviewed migration and recovery/test plan is approved.
+- The exact second-factor method is still undecided. Compare supported options and confirm with the owner before implementing or enabling MFA.
+- Before implementation, inspect current Supabase Auth MFA support/settings and the app's login/session flow. Keep customer phone SMS OTP behavior unchanged unless the owner separately approves a change.
+- No database, Auth configuration, Storage, RPC, or live authorization changes are authorized by this decision.
