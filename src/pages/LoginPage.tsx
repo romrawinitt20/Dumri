@@ -25,7 +25,12 @@ export default function LoginPage() {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
-      if (data.user) await ensureUserProfile(data.user);
+      if (!data.user?.email_confirmed_at) {
+        await supabase.auth.signOut();
+        navigate("/verify-email", { replace: true, state: { email: email.trim() } });
+        return;
+      }
+      await ensureUserProfile(data.user);
       navigate(destination, { replace: true });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "เข้าสู่ระบบไม่สำเร็จ");
