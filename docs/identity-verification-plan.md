@@ -160,3 +160,12 @@ The owner confirmed this login direction. This is a product/design decision only
 - Recovery must not rely solely on a user-editable profile field, a staff admin's discretion, or knowledge of a numeric user ID. The recovery process must verify control of the owner account through a separate trusted method, be audited, and prevent staff admins from promoting themselves to owner.
 - Before implementation, confirm the exact Supabase-supported TOTP enrollment, challenge, assurance-level enforcement, and recovery capabilities. Do not invent a recovery-code feature if the platform does not provide it natively; if a custom secure recovery flow is required, design and review it separately.
 - No database schema, Auth configuration, RPC, live permission, or deployment changes are authorized by this decision.
+
+
+### Technical correction after checking current Supabase MFA docs (2026-10-25; design only)
+
+- Supabase Auth's current MFA API documentation says recovery codes are not supported natively. Do not promise a built-in recovery-code feature or implement a homemade code store without a separate security design.
+- Preferred first recovery safeguard: enroll a second TOTP authenticator factor/device under the owner's control, verify it works, and test the recovery procedure before relying on it. Supabase currently permits multiple factors (up to 10), but the exact UX and owner-only enforcement must be implemented and tested.
+- If all enrolled authenticator devices are lost, use a separately designed, strongly verified account-recovery procedure with audit logging. Its trusted verification method, authorization boundaries, rate limits, and lockout recovery must be reviewed before implementation.
+- Require the session to reach Supabase MFA assurance level AAL2 for owner-only access and sensitive owner actions; frontend-only routing is not a security boundary.
+- This correction updates the design document only. No database, Auth configuration, Storage, RPC, permissions, or deployment was changed.
