@@ -8,7 +8,7 @@ export default function ProtectedRoute() {
   if (!configured) return <Navigate to="/login" replace state={{ from: location }} />;
   if (loading) return <main className="center-page"><p>กำลังตรวจสอบการเข้าสู่ระบบ…</p></main>;
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
-  if (!user.email_confirmed_at) return <Navigate to="/verify-email" replace state={{ email: user.email }} />;
+  if (!user.phone_confirmed_at) return <Navigate to="/verify-phone" replace />;
 
   return <Outlet />;
 }
