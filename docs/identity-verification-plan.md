@@ -92,4 +92,4 @@ The exact table design, driving-licence image requirements, RLS policies, Storag
 
 ## Build status note
 
-- A CI build failed because `VerifyPhonePage.tsx` declared an unused `setPhone` state setter. The unused state declaration was removed in a code-only commit on `setup/supabase-auth-routes`; this did not change the database. A new CI result is still required to verify the fix.
+- A CI build failed because `VerifyPhonePage.tsx` declared an unused `setPhone` state setter. The unused state declaration was removed in code-only commit `7b54243a9ffdedb571190175ebcabbce717d09b0`; GitHub Actions CI run #39 then completed successfully for that code commit. This verifies the TypeScript/Vite build only, not real SMS delivery or end-to-end Supabase Auth. No database changes were made.
