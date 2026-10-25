@@ -169,3 +169,11 @@ The owner confirmed this login direction. This is a product/design decision only
 - If all enrolled authenticator devices are lost, use a separately designed, strongly verified account-recovery procedure with audit logging. Its trusted verification method, authorization boundaries, rate limits, and lockout recovery must be reviewed before implementation.
 - Require the session to reach Supabase MFA assurance level AAL2 for owner-only access and sensitive owner actions; frontend-only routing is not a security boundary.
 - This correction updates the design document only. No database, Auth configuration, Storage, RPC, permissions, or deployment was changed.
+
+
+### Owner MFA backup-device requirement confirmed (2026-10-25; design only)
+
+- The owner accepted the recommendation to require a second authenticator factor/device under the owner's control before enabling the owner account for normal owner-only operations.
+- Enrollment must not be considered complete until both the primary and backup TOTP factors have been enrolled and successfully challenged. The UI should explain safe setup and storage, and should not display or imply that the account is protected by a working backup factor until its challenge succeeds.
+- The recovery procedure for losing all enrolled devices remains a separate, strongly verified and audit-logged process; Supabase does not natively provide recovery codes.
+- This records the owner's decision only. No database, Auth configuration, Storage, RPC, permissions, or deployment changes were made.
