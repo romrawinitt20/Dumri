@@ -99,3 +99,34 @@ The exact table design, driving-licence image requirements, RLS policies, Storag
 ## Build status note
 
 - A CI build failed because `VerifyPhonePage.tsx` declared an unused `setPhone` state setter. The unused state declaration was removed in code-only commit `7b54243a9ffdedb571190175ebcabbce717d09b0`; GitHub Actions CI run #39 then completed successfully for that code commit. This verifies the TypeScript/Vite build only, not real SMS delivery or end-to-end Supabase Auth. No database changes were made.
+
+
+## Owner/Super Admin bootstrap — design only, approved direction (2026-10-25)
+
+The owner explicitly chose to design a safer owner setup that does **not** grant ownership automatically to database user ID `1`. No database, Auth users, SQL functions, permissions, or application authorization were changed by this decision.
+
+### Current state observed read-only
+
+- The database currently has exactly one active `admin_profiles` row with `admin_level = 'owner'`, and it belongs to `public.users.id = 1`.
+- `public.users.id = 1` is currently active, has role `admin`, and is linked to an Auth UID.
+- `fn_assert_owner()` currently requires all of: authenticated session, `fn_my_user_id() = 1`, role `admin`, active owner-level `admin_profiles` row, active user status, and matching `auth_uid`.
+- Therefore the current owner-management RPCs are still coupled to ID 1. Do not remove or change this guard until a reviewed replacement has been prepared and tested, or the existing owner account could lose access.
+- Existing `fn_owner_upsert_admin()` permits only a fixed list of staff permission keys and prevents staff from receiving owner level. It requires a pre-existing user linked to Auth. Preserve least privilege and the audit log.
+
+### Proposed safe bootstrap sequence (not implemented)
+
+1. The project owner first confirms access to the correct Supabase project and an Auth account they control; require successful Auth verification and a strong recovery method.
+2. Use a one-time, trusted setup process outside the public signup UI to link the verified Auth UID to the owner record. Never use a client-provided user ID, editable user metadata, a hard-coded numeric ID, or a normal signup role field as proof of ownership.
+3. Make the bootstrap process single-use and fail closed after an active owner has been established. It must not expose a reusable setup secret to the browser; if a server-side Edge Function is used, keep secrets in server-side environment variables, validate the caller and requested Auth UID, and disable/reject bootstrap after first success.
+4. The database owner guard must check a trusted owner record linked to `auth.uid()`, active account status, and owner level. It must not grant owner status solely because a row has a particular numeric ID or because a claim in user-editable metadata says `owner`.
+5. Maintain exactly one active owner unless a deliberate owner-transfer/recovery process is designed and approved. Staff admins can be many, but cannot promote themselves, edit the owner, or grant owner permissions.
+6. Every owner action that adds, edits, disables, or restores a staff admin must be server-authorized and audit-logged. UI hiding alone is not authorization.
+7. Before switching the guard, test both the current owner's continued access and denial for customer, merchant, rider, ordinary admin, unauthenticated sessions, and stale/disabled owner accounts. Prepare a recovery path so a failed rollout cannot permanently lock the owner out.
+8. Only after the owner reviews the detailed migration and test plan should schema/functions/permissions be changed. Take a backup/export and run Security Advisor after the approved change.
+
+### Important boundaries
+
+- The public registration flow must never create an owner or admin based on submitted role or user metadata.
+- The current ID-1 owner guard remains unchanged until an approved migration is implemented.
+- Do not merge the open draft PR or apply SQL changes without explicit owner approval.
+- This plan is not yet proof that the current owner account has a configured recovery method or MFA; inspect/confirm that separately.
