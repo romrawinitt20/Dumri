@@ -151,3 +151,12 @@ The owner confirmed this login direction. This is a product/design decision only
 - The implementation must use Supabase-supported MFA APIs and verify the session's achieved assurance level before sensitive owner actions; a frontend-only challenge is not sufficient.
 - Enrollment, recovery codes/recovery process, lost-device handling, and whether owner access should require a fresh MFA challenge for high-risk actions must be designed and reviewed before enabling this in production.
 - This selection does not authorize changes to database schema, Auth configuration, RPCs, live permissions, or deployment. Customer SMS OTP remains unchanged.
+
+
+### Owner MFA recovery selected (2026-10-25; design only)
+
+- The owner accepted the recommended recovery approach: generate recovery codes in advance, store them securely offline, and provide a carefully verified account-recovery procedure for lost-device scenarios.
+- Recovery codes must be high-entropy, single-use, stored/displayed only at enrollment or regeneration, and invalidated after use or regeneration. Store only secure verifiers/hashes server-side if the chosen supported implementation permits it; never log codes or expose them in analytics.
+- Recovery must not rely solely on a user-editable profile field, a staff admin's discretion, or knowledge of a numeric user ID. The recovery process must verify control of the owner account through a separate trusted method, be audited, and prevent staff admins from promoting themselves to owner.
+- Before implementation, confirm the exact Supabase-supported TOTP enrollment, challenge, assurance-level enforcement, and recovery capabilities. Do not invent a recovery-code feature if the platform does not provide it natively; if a custom secure recovery flow is required, design and review it separately.
+- No database schema, Auth configuration, RPC, live permission, or deployment changes are authorized by this decision.
