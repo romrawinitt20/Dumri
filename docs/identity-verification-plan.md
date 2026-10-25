@@ -90,6 +90,12 @@ The exact table design, driving-licence image requirements, RLS policies, Storag
 - The read-only policy inventory found 17 public tables with RLS enabled but no table policies. Some may be intentionally RPC-only, so do not add broad policies. Review each table and its callable RPCs before deciding whether any policy is missing.
 - Security Advisor reports callable `SECURITY DEFINER` functions and disabled leaked-password protection. Each privileged RPC needs a function-by-function authorization review; do not bulk-revoke or bulk-change functions without checking callers and intended behavior.
 
+## Auth/dashboard progress note
+
+- The dashboard now reads the signed-in user's own profile through the existing `fn_my_profile()` RPC and displays the database role and account status. It does not use editable Auth metadata as authorization and does not grant capabilities based on the display.
+- This is a code-only UI improvement. Role-specific operational screens, the owner business overview, and the owner admin-management interface are still not implemented. The current database has some owner/admin RPCs, but safe UI integration must follow a review of their allowlist, owner-account recovery, and current permissions.
+- The dashboard change does not solve the registration RPC gap noted above and does not constitute an end-to-end Auth test.
+
 ## Build status note
 
 - A CI build failed because `VerifyPhonePage.tsx` declared an unused `setPhone` state setter. The unused state declaration was removed in code-only commit `7b54243a9ffdedb571190175ebcabbce717d09b0`; GitHub Actions CI run #39 then completed successfully for that code commit. This verifies the TypeScript/Vite build only, not real SMS delivery or end-to-end Supabase Auth. No database changes were made.
