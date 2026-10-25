@@ -16,7 +16,7 @@ export default function VerifyPhonePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const state = (location.state as VerificationState | null) ?? {};
-  const [phone, setPhone] = useState(state.phone ?? "");
+  const phone = state.phone ?? "";
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
