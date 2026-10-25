@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../auth/AuthProvider";
+import { ensureUserProfile } from "../auth/ensureCustomerProfile";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,8 +23,9 @@ export default function LoginPage() {
     }
     setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
+      if (data.user) await ensureUserProfile(data.user);
       navigate(destination, { replace: true });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "เข้าสู่ระบบไม่สำเร็จ");
