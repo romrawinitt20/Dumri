@@ -170,7 +170,7 @@ $function$;
 5. Phone uniqueness may reject a newly authenticated user if that phone is already attached to another profile. This should fail closed and trigger a support/reconciliation workflow, not overwrite the other account.
 6. Review EXECUTE grants and function ownership in the migration; do not widen grants. Confirm `authenticated` is the intended caller and anonymous execution remains denied.
 7. The client helper should later stop treating mutable `user_metadata` as the authoritative phone source. The database function remains the security boundary.
-8. **Do not deploy this exact draft until the Auth phone mismatch is understood.** First test a disposable phone-OTP account end-to-end and verify `auth.users.phone` plus `phone_confirmed_at` are populated after OTP verification. If the provider configuration intentionally does not populate them, redesign the trusted server-side verification flow rather than trusting user metadata.
+8. **Do not deploy this exact draft until the Auth phone behavior is verified.** The project owner clarified that all 9 currently linked accounts were created for testing, so their empty Auth phone fields are not treated as a production-account defect. First test a newly created disposable phone-OTP account end-to-end and verify `auth.users.phone` plus `phone_confirmed_at` are populated after OTP verification. If the provider configuration intentionally does not populate them, redesign the trusted server-side verification flow rather than trusting user metadata.
 9. The existing-profile lookup is deliberately before the new-user confirmed-phone check, so this RPC remains idempotent for legacy linked accounts. New profile creation still fails closed until Auth phone verification is proven.
 
 ## Rollback
