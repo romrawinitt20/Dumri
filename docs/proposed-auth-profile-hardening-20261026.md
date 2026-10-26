@@ -44,7 +44,7 @@ WHERE conrelid = 'public.users'::regclass
   AND conname = 'users_auth_uid_key';
 ```
 
-Current read-only inspection found 9 users, all 9 linked to an Auth UID, no missing profile phone values, and a UNIQUE constraint on `users.auth_uid`. It did not yet compare every profile phone to the Auth phone; inspect that result before deciding whether any data cleanup is needed.
+Current read-only inspection found 9 users, all 9 linked to an Auth UID, no missing profile phone values, and a UNIQUE constraint on `users.auth_uid`. A follow-up comparison found **all 9 Auth records have `auth.users.phone IS NULL` and `phone_confirmed_at IS NULL`**, while the corresponding `public.users.phone` values are populated. This is a release-blocking mismatch to investigate in the Auth/provider/test-account setup; do not assume these are valid confirmed-phone accounts and do not rewrite existing user data. The strict phone requirement below would reject new registrations until Auth phone storage/confirmation is verified end-to-end.
 
 ## Proposed replacement function
 
@@ -74,6 +74,17 @@ BEGIN
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'authentication required'
       USING ERRCODE = '42501';
+  END IF;
+
+  -- Return an existing profile before new-registration validation so that
+  -- a legacy linked account is not broken by this registration RPC.
+  SELECT u.id INTO v_user_id
+  FROM public.users AS u
+  WHERE u.auth_uid = v_uid
+  LIMIT 1;
+
+  IF v_user_id IS NOT NULL THEN
+    RETURN v_user_id;
   END IF;
 
   SELECT au.phone, au.phone_confirmed_at, au.email
@@ -106,15 +117,6 @@ BEGIN
 
   -- Never trust p_phone or p_email as identity sources.
   -- Auth owns the canonical, confirmed phone and email.
-  SELECT u.id INTO v_user_id
-  FROM public.users AS u
-  WHERE u.auth_uid = v_uid
-  LIMIT 1;
-
-  IF v_user_id IS NOT NULL THEN
-    RETURN v_user_id;
-  END IF;
-
   v_status := CASE
     WHEN p_role = 'customer'::public.user_role
       THEN 'active'::public.user_status
@@ -168,6 +170,8 @@ $function$;
 5. Phone uniqueness may reject a newly authenticated user if that phone is already attached to another profile. This should fail closed and trigger a support/reconciliation workflow, not overwrite the other account.
 6. Review EXECUTE grants and function ownership in the migration; do not widen grants. Confirm `authenticated` is the intended caller and anonymous execution remains denied.
 7. The client helper should later stop treating mutable `user_metadata` as the authoritative phone source. The database function remains the security boundary.
+8. **Do not deploy this exact draft until the Auth phone mismatch is understood.** First test a disposable phone-OTP account end-to-end and verify `auth.users.phone` plus `phone_confirmed_at` are populated after OTP verification. If the provider configuration intentionally does not populate them, redesign the trusted server-side verification flow rather than trusting user metadata.
+9. The existing-profile lookup is deliberately before the new-user confirmed-phone check, so this RPC remains idempotent for legacy linked accounts. New profile creation still fails closed until Auth phone verification is proven.
 
 ## Rollback
 
