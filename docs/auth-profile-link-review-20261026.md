@@ -59,3 +59,32 @@ Before applying any migration, show exact SQL, preflight duplicate checks, impac
 ## Scope note
 
 This report covers Dumri's source and the linked Supabase project. No work in this report depends on or attempts to delete another application.
+
+
+## Follow-up evidence — 2026-10-26 (read-only)
+
+### F6 — Auth phone fields are empty for all currently linked accounts
+
+A read-only aggregate query comparing `public.users` with `auth.users` returned:
+
+- Linked profile count: 9
+- Auth records with `phone IS NULL`: 9
+- Auth records with `phone_confirmed_at IS NULL`: 9
+- Exact non-null phone matches: 0
+- Profile phone values missing: 0 (from the earlier profile data check)
+
+This does **not** prove OTP verification is broken: the records may have been created through a different flow or may be fixtures. It does prove the current database snapshot cannot be used as evidence that these 9 users have a canonical confirmed phone in Auth. Do not rewrite existing data. Create a disposable test account using the actual phone-OTP flow, verify OTP, then inspect whether `auth.users.phone` and `phone_confirmed_at` are populated.
+
+**Release gate:** the draft hardening function that requires a confirmed Auth phone must not be deployed until the disposable-account test passes or the trusted server-side verification design is revised. The draft has been amended to return an existing profile before enforcing new-registration phone validation, avoiding an unnecessary break for legacy linked profiles.
+
+### F7 — Latest Security Advisor snapshot
+
+Read-only Security Advisor snapshot observed 2026-10-26:
+
+- 84 `SECURITY DEFINER` functions executable by `authenticated` were flagged as WARN.
+- 17 tables with RLS enabled and no policies were flagged as INFO.
+- Leaked-password protection was flagged as disabled (WARN).
+
+These are triage findings, not proof that all 84 functions or all 17 tables are exploitable. Some RPCs may intentionally be callable and enforce authorization internally; some tables may intentionally be RPC-only. Audit each function's authorization checks and each table's grants/access paths before changing grants or policies. Do not blanket-revoke or add blanket policies.
+
+No production database/Auth/Storage/grants/policies or application settings were changed during this follow-up.
