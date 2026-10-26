@@ -54,3 +54,8 @@ A read-only scan of public SECURITY DEFINER function definitions found 95 functi
 - 0 function definitions containing an explicit JWT AAL check
 
 These categories can overlap and are not additive. The count does not prove every function is vulnerable; it shows that MFA enforcement cannot safely be added to only one frontend route or one helper without checking all authorization paths. Before preparing an executable migration, inspect direct checks and wrappers, determine which functions are owner-only versus staff-permission operations, and test each category.
+
+
+### Inventory counting clarification
+
+The earlier “18 additional direct admin-related checks” figure came from a broad text-pattern scan (`role ... admin`) and is only a candidate count, not a verified count of direct authorization checks. A more focused search for `admin_profiles` or role/admin text while excluding the shared guard helpers returned five candidate definitions, several of which are customer/profile/order functions rather than owner authorization. Do not treat either broad count as a final vulnerability list; inspect the function bodies and their call paths before preparing an executable migration.
