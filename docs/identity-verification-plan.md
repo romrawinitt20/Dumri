@@ -177,3 +177,13 @@ The owner confirmed this login direction. This is a product/design decision only
 - Enrollment must not be considered complete until both the primary and backup TOTP factors have been enrolled and successfully challenged. The UI should explain safe setup and storage, and should not display or imply that the account is protected by a working backup factor until its challenge succeeds.
 - The recovery procedure for losing all enrolled devices remains a separate, strongly verified and audit-logged process; Supabase does not natively provide recovery codes.
 - This records the owner's decision only. No database, Auth configuration, Storage, RPC, permissions, or deployment changes were made.
+
+
+## Read-only owner MFA review (2026-10-26)
+
+- Owner email/password login is not implemented; the current login page uses phone SMS OTP for all users.
+- AuthProvider restores the session but does not check MFA assurance level or enrolled factors.
+- ProtectedRoute checks sign-in and phone confirmation only. It is not an authorization boundary for owner actions.
+- The current database owner guard still depends on user ID 1. Do not change this guard until a replacement, tests, and lockout-recovery plan are reviewed.
+- The profile-registration RPC does not visibly verify confirmed phone status or match the submitted phone to the Auth phone. Review this separately before relying on it as a security boundary.
+- No application code, database schema/functions, Auth settings, Storage policies, permissions, or deployment were changed during this read-only review.
