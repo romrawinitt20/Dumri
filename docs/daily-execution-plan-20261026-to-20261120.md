@@ -48,3 +48,20 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
 - If order/payment state integrity is not testable by 13 Nov, use simulated payments only and do not claim financial workflows complete.
 - If high-risk security findings or role isolation fail on 17 Nov, do not release to production on 20 Nov; provide a testable MVP or a clear No-Go report instead.
 - Do not silently weaken security, use real customer/merchant/rider data for tests, promote accounts, or change shared production settings to meet the date.
+
+
+## Baseline scorecard — 2026-10-26
+
+- Status: **Yellow**.
+- Completed with evidence:
+  - Daily execution plan is present in this repository.
+  - Read-only source inspection confirmed the Dumri shared client, Auth provider, login/register/OTP flows, protected dashboard route, profile RPC caller, demo-order page, demo-payout page, and CI build workflow.
+  - Read-only Supabase table metadata and Security/Performance Advisor snapshots were inspected.
+  - Added `docs/shared-supabase-consumer-inventory-20261026.md` (commit `575d02e404fbd5765efb9b6ab06bbf0d18daace4`) to record observed consumers, risks, and limitations.
+- Not yet passed:
+  - No successful CI result has been verified for the documentation commit at the time this scorecard was written.
+  - Exact SQL bodies for key registration/profile/admin/order/payment/payout functions could not be retrieved through the available safe read-only route.
+  - The Midnight Meals source repository/consumer map was not available; whole-project consumer inventory is incomplete.
+- Production impact: no database, Auth, Storage, grants, policies, production accounts, or app settings were changed in this work.
+- Target impact: plan/baseline and Dumri-side inventory are documented; shared-project security review remains Yellow/blocked until the unknown consumers and exact function bodies can be reviewed.
+- Next action: obtain the Midnight Meals source/consumer map and a supported way to inspect exact SQL function definitions; do not infer scope or make shared production changes before then.
