@@ -6,6 +6,7 @@ import RegisterPage from "./pages/RegisterPage";
 import VerifyPhonePage from "./pages/VerifyPhonePage";
 import DashboardPage from "./pages/DashboardPage";
 import DemoPage from "./pages/DemoPage";
+import PayoutDemoPage from "./pages/PayoutDemoPage";
 
 export default function App() {
   const { user, loading, configured } = useAuth();
@@ -16,6 +17,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/demo" element={<DemoPage />} />
+      <Route path="/demo/payouts" element={<PayoutDemoPage />} />
       <Route path="/login" element={user ? <Navigate to={phoneVerified ? "/dashboard" : "/verify-phone"} replace /> : <LoginPage />} />
       <Route path="/register" element={user ? <Navigate to={phoneVerified ? "/dashboard" : "/verify-phone"} replace /> : <RegisterPage />} />
       <Route path="/verify-phone" element={<VerifyPhonePage />} />
