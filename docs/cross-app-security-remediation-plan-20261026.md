@@ -26,9 +26,12 @@ Live column-privilege checks show `authenticated` has column-level `UPDATE` for 
 - Several order, finance, admin, and verification functions join `merchant_profiles`. Do not remove or rename columns or change function signatures without dependency analysis and tests.
 - The Security Advisor reports numerous callable SECURITY DEFINER functions. This is a review queue, not proof that each function is exploitable; inspect authorization checks and client dependencies function by function.
 
-## Newly identified possible client: Midnight Meals
+## Newly identified client: Midnight Meals
 
-User provided the deployed URL `https://midnight-meals.lovable.app`. It is added to the client inventory as **unverified / not yet mapped**. A read-only public web fetch did not return the app content, and GitHub repository search did not find an associated repository. Therefore we have not verified whether this Lovable app points to Supabase project `vdmqhgdcfsswinlilwyn`, a different Supabase project, or a server-side integration. Do not infer the project binding from the URL or change permissions based on this link alone. Next, obtain the app's Lovable project/source or inspect its Supabase project reference in Lovable settings (the project ref is enough; never share API keys or secrets).
+- Deployed URL provided by the user: `https://midnight-meals.lovable.app`.
+- The user then supplied `https://vdmqhgdcfsswinlilwyn.supabase.co` as the Supabase project URL associated with this app. This exactly matches the Dumri Supabase project reference `vdmqhgdcfsswinlilwyn`; therefore, for impact planning, treat Midnight Meals as a client of the same Supabase project.
+- The public web fetch of the deployed app failed, and GitHub repository search did not find an associated repository. We have not yet inspected the Lovable source or established its deployed version, key type, direct table queries, RPC calls, or write paths.
+- Do not share or request API keys, service-role keys, or other secrets. The project URL/reference alone is sufficient to identify the project.
 
 ## What the current evidence cannot establish
 
@@ -41,7 +44,7 @@ User provided the deployed URL `https://midnight-meals.lovable.app`. It is added
 
 ### Phase 1 — Inventory every consumer (no production changes)
 
-Create a register of every app, website, admin dashboard, automation, and backend that uses this project. Include `https://midnight-meals.lovable.app` as a possible client until its Supabase project reference is confirmed. For each, record owner/contact, repository, environment (production/staging), deployed version, key type (publishable/anon vs server-only secret), and whether it calls:
+Create a register of every app, website, admin dashboard, automation, and backend that uses this project. Include Dumri and Midnight Meals as confirmed clients for impact planning. For each, record owner/contact, repository, environment (production/staging), deployed version, key type (publishable/anon vs server-only secret), and whether it calls:
 - direct REST reads/writes on `merchant_profiles` or `rider_profiles`;
 - wildcard reads such as `select('*')`;
 - public shop columns, payout fields, or verification fields;
@@ -101,4 +104,4 @@ Test at minimum with separate sessions for anonymous, unrelated customer, mercha
 
 ## Status
 
-**Prepared plan only.** No live changes made. The next required input is an inventory of the other apps/websites (names and repository/deployment links if available). Until those consumers are identified, impact assessment is incomplete and the production migration must remain blocked.
+**Prepared plan only.** The project reference supplied for Midnight Meals matches Dumri's Supabase project. No live changes made. The next required input is access to the Midnight Meals Lovable source/project view or its repository so its deployed code paths can be inventoried. Until that client and any other consumers are mapped, the production migration must remain blocked.
