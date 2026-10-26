@@ -12,7 +12,7 @@
    - Build Command: `npm run build`
    - Output Directory: `dist`
    - Install Command: `npm install`
-5. ใน Environment Variables เพิ่มค่าต่อไปนี้สำหรับ Preview (และ Production เฉพาะเมื่อจำเป็น):
+5. ใน Environment Variables เพิ่มค่าต่อไปนี้สำหรับ Preview:
    - `VITE_SUPABASE_URL` = URL ของ Supabase project ที่ต้องการทดสอบ
    - `VITE_SUPABASE_PUBLISHABLE_KEY` = publishable key ของ project เดียวกัน
 6. Deploy แล้วคัดลอก URL ที่ Vercel ให้มา
@@ -23,11 +23,12 @@
 
 ใน Supabase Dashboard ของ project ที่เลือก ไปที่ Authentication → URL Configuration:
 
-1. ตั้ง Site URL เป็น URL หลักของเว็บทดสอบที่ Vercel ให้มา
-2. เพิ่ม URL เดียวกันใน Redirect URLs เช่น `https://YOUR-APP.vercel.app/**`
-3. หากใช้ Vercel Preview Deployment ที่มี URL เปลี่ยนตาม commit ให้เพิ่มเฉพาะ preview pattern ที่จำเป็นและปลอดภัย หลีกเลี่ยง wildcard ที่กว้างเกินไป
+1. เริ่มจากเพิ่ม URL ของเว็บทดสอบใน Redirect URLs เช่น `https://YOUR-APP.vercel.app/**`
+2. **อย่าเปลี่ยน Site URL ปัจจุบันทันที** เพราะ Supabase project นี้เคยถูกใช้ร่วมกับแอปอื่น ให้ตรวจสอบ redirect ที่ใช้อยู่และผลกระทบก่อน
+3. หากต้องเปลี่ยน Site URL ให้เปลี่ยนหลังจากยืนยันแล้วว่าไม่ทำให้แอปอื่นที่แชร์ project เดียวกันเสียการทำงาน
+4. หากใช้ Vercel Preview Deployment ที่มี URL เปลี่ยนตาม commit ให้เพิ่มเฉพาะ preview pattern ที่จำเป็นและปลอดภัย หลีกเลี่ยง wildcard ที่กว้างเกินไป
 
-อย่าเปลี่ยนการตั้งค่า Auth ของ project ที่แชร์กับแอปอื่นโดยไม่ตรวจผลกระทบก่อน เพราะการตั้งค่า URL เป็นค่าระดับ project
+การตั้งค่า Auth URL เป็นระดับ project จึงอาจกระทบแอปอื่นที่ใช้ Supabase project เดียวกันได้
 
 ## 3. เปิดใช้งาน SMS OTP
 
