@@ -3,13 +3,13 @@
 Timezone: Asia/Bangkok (UTC+7)
 Target: testable MVP by 2026-11-20, not an automatic production-launch promise.
 Daily evaluation: Green = acceptance evidence exists; Yellow = partial/blocked with a recovery plan; Red = critical blocker or date forecast at risk. A task is not complete because code was written; it needs a repeatable test or direct evidence.
-Scope guardrails: no merge without owner approval; no production DB/Auth/Storage/permission changes without showing exact SQL, impact, rollback and obtaining approval; preserve Midnight Meals; no real-money transfers in demo.
+Scope guardrails: no merge without owner approval; no production DB/Auth/Storage/permission changes without showing exact SQL, impact, rollback and obtaining approval; no real-money transfers in demo. Current execution scope is Dumri; other-app cleanup is out of scope.
 
 | Date | Main deliverable | Acceptance evidence / end-of-day check |
 |---|---|---|
 | Mon 26 Oct | Establish baseline and daily tracking | PR #1 merged; record known risks, test gaps and remaining schedule. |
-| Tue 27 Oct | Source and shared-client inventory | Repository tree, migration inventory, consumers of shared Supabase and unknowns documented; no guessed Midnight Meals assumptions. |
-| Wed 28 Oct | Auth/profile-link review | Exact registration/profile function and caller reviewed, or explicitly blocked if source cannot be safely retrieved; propose negative tests for mismatched phone/UID. |
+| Tue 27 Oct | Source and shared-client inventory | Dumri repository tree, migration inventory, source consumers and known unknowns documented. |
+| Wed 28 Oct | Auth/profile-link review | Review exact registration/profile function and caller; record negative tests for mismatched phone/UID. |
 | Thu 29 Oct | Owner/admin and MFA review | Map owner vs staff vs area admin; confirm MFA/AAL2 enforcement gaps and admin bootstrap path; no admin account changes. |
 | Fri 30 Oct | RLS and sensitive-field audit | Prioritized table/column/function matrix for identity, bank, payment, wallet and complaints; direct grants separated from RPC access. |
 | Sat 31 Oct | Storage/Edge Function and security test plan | Payment-slip policies, Edge Functions and high-risk SECURITY DEFINER list documented; role-based deny/allow test matrix. |
@@ -61,8 +61,11 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
   - Added `docs/shared-supabase-consumer-inventory-20261026.md`; initial inventory commit `575d02e404fbd5765efb9b6ab06bbf0d18daace4`, migration inventory update `fc2bed4f1e3c2f1a876e9ecf2ae36483cea16ae9`.
 - Not yet passed:
   - No successful CI result has been verified for the documentation commit at the time this scorecard was written.
-  - Exact SQL bodies for key registration/profile/admin/order/payment/payout functions could not be retrieved through the available safe read-only route.
-  - The Midnight Meals source repository/consumer map was not available; whole-project consumer inventory is incomplete.
+  - Exact SQL bodies for registration/profile and admin assertion helpers are now inspected read-only; order/payment/payout functions still need review.
+  - Cross-application inventory is intentionally out of scope for the current Dumri execution plan.
 - Production impact: no database, Auth, Storage, grants, policies, production accounts, or app settings were changed in this work.
-- Target impact: plan/baseline and Dumri-side inventory are documented; shared-project security review remains Yellow/blocked until the unknown consumers and exact function bodies can be reviewed.
-- Next action: obtain the Midnight Meals source/consumer map and a supported way to inspect exact SQL function definitions; do not infer scope or make shared production changes before then.
+- Additional evidence on 2026-10-26: read-only review of `fn_my_profile`, `fn_register_profile`, `fn_assert_admin`, `fn_assert_admin_permission`, `fn_assert_owner`, execute grants, and selected RLS policies. `users.auth_uid` has a UNIQUE constraint. Report: `docs/auth-profile-link-review-20261026.md` (commit `7f846741744d0b153a8d4555d7c950b96e0a5a38`).
+- Key finding: registration profile values are taken from client-editable Auth metadata; `fn_register_profile` accepts caller-supplied phone and does not itself check Auth phone confirmation or match phone to `auth.users`. Merchant/rider accounts remain pending, but server-side identity validation needs a fix and negative tests.
+- Production impact: no database, Auth, Storage, grants, policies, production accounts, or app settings were changed in this work.
+- Target impact: Dumri inventory and auth/profile review are documented; status remains Yellow until remediation design is approved and tests pass.
+- Next action: prepare exact SQL/migration and test plan for registration identity hardening, including preflight checks and rollback; do not apply production changes without explicit approval.
