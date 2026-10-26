@@ -57,7 +57,8 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
   - Daily execution plan is present in this repository.
   - Read-only source inspection confirmed the Dumri shared client, Auth provider, login/register/OTP flows, protected dashboard route, profile RPC caller, demo-order page, demo-payout page, and CI build workflow.
   - Read-only Supabase table metadata and Security/Performance Advisor snapshots were inspected.
-  - Added `docs/shared-supabase-consumer-inventory-20261026.md` (commit `575d02e404fbd5765efb9b6ab06bbf0d18daace4`) to record observed consumers, risks, and limitations.
+  - Recorded all 89 applied migration version/name pairs in `docs/shared-supabase-consumer-inventory-20261026.md`; the observed range is 20261023145910–20261024194639.
+  - Added `docs/shared-supabase-consumer-inventory-20261026.md`; initial inventory commit `575d02e404fbd5765efb9b6ab06bbf0d18daace4`, migration inventory update `fc2bed4f1e3c2f1a876e9ecf2ae36483cea16ae9`.
 - Not yet passed:
   - No successful CI result has been verified for the documentation commit at the time this scorecard was written.
   - Exact SQL bodies for key registration/profile/admin/order/payment/payout functions could not be retrieved through the available safe read-only route.
