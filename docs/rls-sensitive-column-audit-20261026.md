@@ -16,11 +16,16 @@ Observed directly from live database:
 - A read policy `ดูร้านที่อนุมัติแล้ว` allows rows when `is_verified = true`, or when the row belongs to the current app user, or when `fn_my_role() = 'admin'`.
 - The table includes `bank_name`, `bank_account`, `approved_by`, and `approved_at`.
 - Effective privilege check returned `true` for both roles on table SELECT, bank-name SELECT, bank-account SELECT, and shop-name SELECT.
+- A focused column-privilege check also confirms `authenticated` has `UPDATE` on `bank_name` and `bank_account`.
 
 Why this matters:
 - RLS is row-level, not column-level. Table-level SELECT does not restrict which columns can be selected.
 - The combination of public SELECT and a policy permitting verified shop rows means anonymous clients can potentially request bank account fields for verified merchants. This is a confirmed privilege configuration and a high-priority likely data exposure, though actual row-level data retrieval was not attempted.
 - Treat this as a production-blocking issue until mitigated and tested.
+
+## Additional confirmed risk: direct updates to merchant payout details
+
+The live `information_schema.column_privileges` result shows `authenticated` has column-level `UPDATE` for `bank_name` and `bank_account`. The policy `ร้านแก้ไขร้านตัวเอง` checks row ownership (`user_id = fn_my_user_id()`) before and after the update, but does not by itself require re-review of payout details. This creates a risk that a merchant could change payout details while retaining an existing verified status. No actual change or abuse was attempted. Before restricting these updates, inspect all clients that write these fields and provide a replacement workflow for submitting bank changes for review.
 
 ## Mitigation prepared (not applied)
 
@@ -68,7 +73,7 @@ RLS enabled with no policies generally means direct access through the Data API 
 ### Other policy patterns needing test coverage
 - `payments` has a table policy checking `fn_my_role() = 'admin'` for all operations. The table's authenticated SELECT grant exists. Verify staff admins do not gain broader access than their intended permission set.
 - `users` read and write policies use a general admin-role check in addition to self checks. Verify the owner/staff distinction before enforcing MFA.
-- `merchant_profiles` update policy constrains row ownership but does not itself restrict columns. Check grants/RPCs prevent merchant self-edit of `is_verified`, payout details, and other admin-controlled fields.
+- `merchant_profiles` update policy constrains row ownership but does not itself restrict columns. Confirmed: `authenticated` has direct UPDATE privilege on `bank_name` and `bank_account`; stage a replacement bank-change/reverification workflow before revoking those writes. The focused query did not show UPDATE on `is_verified`, but continue checking all admin-controlled fields and RPC paths.
 - `rider_profiles` self-update policy similarly uses row ownership; verify column privileges/RPC controls prevent self-editing verification status and other admin-controlled fields.
 
 ## Next safe sequence
@@ -79,6 +84,10 @@ RLS enabled with no policies generally means direct access through the Data API 
 4. Test RLS/RPC behavior with separate anonymous, customer, merchant, rider, staff-admin, and owner sessions.
 5. Review and approve the production migration before applying it to the live database.
 
+## Cross-app compatibility plan
+
+See [`docs/cross-app-security-remediation-plan-20261026.md`](https://github.com/romrawinitt20/Dumri/blob/setup/supabase-auth-routes/docs/cross-app-security-remediation-plan-20261026.md). Because this Supabase project is shared with other clients, do not apply the rehearsal SQL as a production migration until all clients are inventoried, direct reads/writes are replaced or tested, and the owner explicitly approves the exact migration.
+
 ## Status
 
-Read-only live inspection only. No live changes, no SQL migration, no PR merge.
+Read-only live inspection only. No live changes, no SQL migration, no Auth/Storage changes, and no PR merge.
