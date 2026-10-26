@@ -19,9 +19,9 @@ The client selects `role`, `full_name`, and `phone` into Auth user metadata. The
 
 Impact: a caller who can alter their own Auth metadata or call the RPC directly may attempt to create a profile with a different phone value or a self-selected non-admin role. Merchant/rider profiles are created with `pending` status, which limits immediate access, but this still creates identity/data-integrity risk and must be negatively tested. The source-level phone-confirmation check in the client is not a server-side security boundary.
 
-### F2 — Registration function can insert more than one profile row per Auth UID unless a database constraint prevents it
+### F2 — Duplicate registration is guarded by a unique constraint, but function behavior should be idempotent
 
-The function inserts into `public.users` and has no explicit lookup/upsert for an existing `auth_uid`. A database uniqueness constraint may block duplicates; that constraint was not confirmed in this review. Verify the actual constraint before classifying this as exploitable.
+Read-only inspection confirmed `public.users_auth_uid_key UNIQUE (auth_uid)`, so duplicate rows for one Auth UID should be blocked at the database level. The function itself has no existing-profile lookup/upsert, so a repeated call can still raise a uniqueness error instead of returning the existing profile. This is a reliability/idempotency defect, not evidence that duplicate rows can be created.
 
 ### F3 — Admin-sensitive RLS policies use the broad `fn_my_role() = 'admin'` predicate
 
@@ -48,11 +48,11 @@ Use disposable test accounts only. Do not use production customer/merchant/rider
 7. Existing Auth user with a profile → ensure-profile call does not mutate role, phone, name, status, or ownership.
 8. Non-admin attempts reads/updates through each reviewed RLS policy → only their own/explicitly permitted rows are visible and writable.
 9. Staff admin without owner-level permission attempts owner-only operations → denied; inactive admin and disabled user → denied.
-10. Verify the expected grants for anonymous/authenticated/service-role callers and check the database uniqueness constraint on `users.auth_uid`.
+10. Verify expected grants for anonymous/authenticated/service-role callers and test the existing `users_auth_uid_key` constraint under repeated and concurrent registration.
 
 ## Recommended next step (not applied)
 
-Prepare a reviewed migration that makes registration identity server-derived: require `auth.uid()`, load the corresponding `auth.users` record, require its phone to be confirmed, derive the canonical phone from Auth rather than accepting a client-supplied phone, validate allowed signup roles, and enforce one profile per Auth UID with a database uniqueness constraint after checking/repairing existing duplicates. Decide whether requested role should be stored as a pending application rather than trusted profile authority. Add tests before deployment.
+Prepare a reviewed migration that makes registration identity server-derived: require `auth.uid()`, load the corresponding `auth.users` record, require its phone to be confirmed, derive the canonical phone from Auth rather than accepting a client-supplied phone, validate allowed signup roles, and return the existing profile for repeated registration. The unique constraint `users_auth_uid_key` already exists. Decide whether requested role should be stored as a pending application rather than trusted profile authority. Add tests before deployment. A draft-only proposal is recorded in `docs/proposed-auth-profile-hardening-20261026.md` (commit `7c29b4667193341796d7d7c0fc6797992b9e3976`).
 
 Before applying any migration, show exact SQL, preflight duplicate checks, impact, and rollback. This review has not changed production state.
 
