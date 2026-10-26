@@ -41,3 +41,16 @@ Status: read-only review; no database or Auth settings changed.
 7. Re-run Security Advisor and build/test checks after approved changes.
 
 This document records findings and a plan only. No application code, database schema/functions, Auth configuration, Storage policy, permission, or deployment was changed as part of this review.
+
+
+## Expanded guard inventory (2026-10-26)
+
+A read-only scan of public SECURITY DEFINER function definitions found 95 functions in total, with:
+- 7 calling `fn_assert_owner()`
+- 9 calling `fn_assert_admin()` (including the helper itself)
+- 16 calling `fn_assert_admin_permission()` (including that helper)
+- 17 calling `fn_is_admin()` (including the helper itself)
+- 18 additional functions with direct admin-related checks that need individual review
+- 0 function definitions containing an explicit JWT AAL check
+
+These categories can overlap and are not additive. The count does not prove every function is vulnerable; it shows that MFA enforcement cannot safely be added to only one frontend route or one helper without checking all authorization paths. Before preparing an executable migration, inspect direct checks and wrappers, determine which functions are owner-only versus staff-permission operations, and test each category.
