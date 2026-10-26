@@ -88,3 +88,8 @@ Read-only Security Advisor snapshot observed 2026-10-26:
 These are triage findings, not proof that all 84 functions or all 17 tables are exploitable. Some RPCs may intentionally be callable and enforce authorization internally; some tables may intentionally be RPC-only. Audit each function's authorization checks and each table's grants/access paths before changing grants or policies. Do not blanket-revoke or add blanket policies.
 
 No production database/Auth/Storage/grants/policies or application settings were changed during this follow-up.
+
+
+### User clarification — 2026-10-26
+
+The project owner confirmed that the 9 linked accounts in this snapshot were created for testing. Therefore, the empty Auth phone fields are **not classified as evidence of broken production customer accounts** and no data cleanup is indicated. They also do not prove the phone-OTP flow works or fails. Keep the finding as a test-coverage gap: use a newly created disposable account through the actual phone-OTP registration flow and verify Auth phone/confirmation fields after successful verification. Preserve all existing test records unless the owner separately requests cleanup.
