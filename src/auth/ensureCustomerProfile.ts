@@ -5,8 +5,8 @@ type SignupRole = "customer" | "merchant" | "rider";
 
 export async function ensureUserProfile(user: User) {
   if (!supabase) throw new Error("ยังไม่ได้ตั้งค่า Supabase");
-  if (!user.phone_confirmed_at) {
-    throw new Error("กรุณายืนยันเบอร์โทรศัพท์ก่อนใช้งาน Dumri");
+  if (!user.email_confirmed_at) {
+    throw new Error("กรุณายืนยันอีเมลก่อนใช้งาน Dumri");
   }
 
   const { data: profiles, error: profileError } = await supabase.rpc("fn_my_profile");
@@ -16,7 +16,7 @@ export async function ensureUserProfile(user: User) {
   const metadata = user.user_metadata ?? {};
   const role = metadata.role;
   const fullName = typeof metadata.full_name === "string" ? metadata.full_name.trim() : "";
-  const phone = typeof metadata.phone === "string" ? metadata.phone.trim() : user.phone ?? "";
+  const phone = typeof metadata.phone === "string" ? metadata.phone.trim() : "";
 
   // Existing accounts without signup metadata are not modified automatically.
   if (role !== "customer" && role !== "merchant" && role !== "rider") {
