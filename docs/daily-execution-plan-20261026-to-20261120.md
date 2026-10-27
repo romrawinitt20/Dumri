@@ -108,3 +108,57 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
 - This updates the evidence state for the 2026-10-27 scorecard only. It does not expand the workflow's coverage: `.github/workflows/ci.yml` still runs install/build only. No OTP, profile-link, route authorization, RLS/RPC, or end-to-end test result is evidenced by this run.
 - Overall status remains **Yellow**. The inventory/build checkpoint is evidenced; runtime Auth/profile and authorization acceptance remains blocked/unverified. Next scheduled deliverable for 2026-10-28 is the read-only Auth/profile-link review, including a negative-test plan for mismatched phone and Auth UID.
 - Safety: no production Supabase/Auth/Storage/permission changes, no account/data changes, no PR merge, and no work on other applications.
+
+
+### Follow-up evidence — 2026-10-27, staging readiness
+
+- The scheduled 2026-10-27 deliverable (source/shared-client inventory) is complete based on the repository evidence above: the Dumri source/call-site inventory, 89 migration version/name pairs, known unknowns, and a successful build-only CI run are documented.
+- Added a repeatable 16-case Auth/profile-link and role-isolation test matrix in `docs/auth-profile-link-test-matrix-20261028.md` on draft PR #5. The matrix is a plan, not a test execution result.
+- Read-only Supabase project discovery found only the Dumri project ref `vdmqhgdcfsswinlilwyn` available to this connection; no separate staging project was listed. Therefore all runtime OTP/profile/RLS/RPC tests remain **BLOCKED / NOT RUN**. Do not probe the shared/live project or create/promote/delete accounts to bypass this blocker.
+- Current day-27 assessment: **Yellow overall**. Inventory/build acceptance is evidenced; runtime auth and authorization acceptance is not. No production Supabase/Auth/Storage/permission change, no account/data change, no PR merge, and no Midnight Meals work was performed.
+- Next scheduled deliverable for 2026-10-28: complete the read-only Auth/profile-link review and negative-test plan; keep runtime execution blocked until an isolated staging project is available.
+
+## Daily scorecard — 2026-10-28
+
+- Date and target deliverable: Wednesday 28 October — read-only Auth/profile-link review and negative-test plan.
+- Status: **Yellow**. Source review and negative-test expectations are documented; runtime tests are **BLOCKED / NOT RUN** because an isolated staging project is not available to this connection.
+- Evidence: [Auth/Profile Link Review — 2026-10-28](auth-profile-link-review-20261028.md); prior database/function findings remain in [the 2026-10-26 review](auth-profile-link-review-20261026.md).
+- Findings recorded:
+  - Signup sends client-selected role/name/phone in mutable Auth metadata; profile helper trusts metadata and prefers metadata phone over Auth phone.
+  - The database registration function needs to enforce confirmed/canonical identity and role validation server-side; UI checks are not sufficient.
+  - OTP verification can navigate to dashboard without calling the profile helper if registration route state is incomplete.
+  - ProtectedRoute checks session/phone confirmation but does not itself prove profile existence, role approval, or authorization for every destination; downstream controls require review/tests.
+- Negative-test plan: 12 cases covering unauthenticated registration, unconfirmed phone, phone mismatch, metadata role tampering, admin role rejection, duplicate/concurrent registration, cross-user access, wrong-phone OTP, incomplete route state, existing-profile immutability, pending/rejected/disabled workflows, and duplicate UID linkage.
+- What passed: the source review and expected outcomes are recorded. No runtime test is represented as passing.
+- Blockers: no isolated staging project is available; OTP provider delivery and verification remain unconfirmed. Do not run these cases against the shared/live project or change production settings/data to bypass the blocker.
+- Production impact: no app code, Supabase database/Auth/Storage/grants/policies, accounts, or settings changed. No PR merged; PR #5 remains draft.
+- Next action: obtain an isolated staging environment, verify a fresh disposable OTP account, then run the negative-test matrix with redacted evidence. Keep the SQL hardening proposal draft-only until this gate is satisfied.
+
+### Prework for 2026-10-29 — owner/admin and MFA review
+
+- Read-only follow-up report added: [Owner/Admin Authorization and MFA Review — 2026-10-28](owner-admin-mfa-review-20261028.md).
+- Confirmed from source/document review: current UI uses SMS OTP for all roles; no separate owner email/password + TOTP routes are present; AuthProvider/ProtectedRoute do not enforce MFA assurance level; existing reviewed database guard helpers do not check JWT AAL.
+- Clarified the required authorization matrix for customers, merchants, riders, staff, owner at AAL1/AAL2, revoked admins, sensitive finance permissions, and out-of-scope geography. Added 14 planned negative cases, including direct RPC bypass and recovery paths.
+- Status remains **Yellow / design review only**. These are source and prior-review findings, not successful runtime tests. A full function-by-function authorization inventory is still required before any migration.
+- Runtime tests remain **BLOCKED / NOT RUN** because no isolated staging project was available in the prior read-only discovery. Do not run probes against the shared/live project.
+- No code, SQL, grants, RLS policies, Auth settings, accounts, or data changed. No PR merged; PR #5 remains draft.
+- Next: finish the owner/admin function call-path inventory, define the exact AAL2 enforcement boundary without over-restricting staff permissions, and keep any migration/rollback as draft until isolated staging and explicit approval exist.
+
+### Owner/Admin function inventory — 2026-10-28 follow-up
+
+- Added [Owner/Admin Function Authorization Inventory](owner-admin-function-authorization-inventory-20261028.md) as a read-only classification register for the next implementation gate.
+- Classified the shared guards `fn_assert_owner()`, `fn_assert_admin()`, `fn_assert_admin_permission(text)`, and `fn_is_admin()`; separated owner-only AAL2 enforcement from least-privilege staff permissions and additional finance/geographic scope checks.
+- Recorded the admin/approval/scope migration names from the existing live baseline as inspection clues only. Migration names do not prove the active SQL behavior.
+- Evidence limitation: the repository connector could retrieve the review documents but not the guessed migration SQL paths; code search returned no function definitions in this pass. The exact per-function SQL body, grants, and caller graph therefore remain unverified. The document explicitly labels itself partial rather than claiming the complete inventory is finished.
+- Runtime tests remain **BLOCKED / NOT RUN** pending isolated staging. No SQL was executed and no production code, database, Auth, Storage, grants, policies, accounts, or data were changed. PR #5 remains draft/unmerged.
+- Next action: retrieve exact function definitions and grants through a supported read-only path, then produce the complete SECURITY DEFINER call-path matrix. Do not draft/apply an executable MFA migration until the exact inventory, rollback, and isolated staging tests are reviewed and the owner explicitly approves.
+
+### Evidence refresh — 2026-10-28, live Auth/profile SQL review (read-only)
+
+- Added [Auth/Profile Live Read-Only SQL Evidence](auth-profile-live-readonly-evidence-20261028.md), commit `e2398d76dc5aacaf25f9324b9944e5c5777f03f2`.
+- Read the active live SQL definitions for `fn_register_profile`, `fn_my_profile`, `fn_my_user_id`, `fn_my_role`, `fn_assert_owner`, `fn_assert_admin`, `fn_assert_admin_permission(text)`, and `fn_is_admin`; checked execute privilege for `anon`, `authenticated`, and `service_role`.
+- Confirmed `fn_register_profile` binds the inserted application profile to `auth.uid()` and rejects the `admin` role, but accepts caller-supplied phone/name/role, does not validate confirmed/canonical Auth phone in SQL, and has no idempotent existing-profile return path. `ensureUserProfile` trusts editable metadata and prefers metadata phone. `VerifyPhonePage` can route to dashboard after OTP without calling profile creation when transient registration state is incomplete.
+- The inspected helper RPCs are executable by `authenticated` but not `anon`; this is not by itself proof of a vulnerability. The owner/admin guard definitions inspected do not check JWT AAL2. Complete caller/call-path review remains required; do not apply blanket revokes.
+- Status: **Yellow**. The scheduled read-only source review and negative-test plan are complete and now backed by current live SQL definitions/grant observations. Runtime tests remain **BLOCKED / NOT RUN** because no isolated staging project is available. Do not probe the shared/live project with mutation or negative authorization tests.
+- Safety: no SQL mutation/DDL, no production Auth/Storage/grant/policy/account/config changes, no PR merge, and no work on other applications.
+- Next action: continue the planned 2026-10-29 owner/admin MFA and caller inventory, using read-only SQL to enumerate privileged RPCs and their guards; keep all remediation as a draft until isolated staging, exact impact/rollback, and explicit approval are available.
