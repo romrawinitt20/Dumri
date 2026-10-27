@@ -134,3 +134,13 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
 - Production impact: no app code, Supabase database/Auth/Storage/grants/policies, accounts, or settings changed. No PR merged; PR #5 remains draft.
 - Next action: obtain an isolated staging environment, verify a fresh disposable OTP account, then run the negative-test matrix with redacted evidence. Keep the SQL hardening proposal draft-only until this gate is satisfied.
 
+### Prework for 2026-10-29 — owner/admin and MFA review
+
+- Read-only follow-up report added: [Owner/Admin Authorization and MFA Review — 2026-10-28](owner-admin-mfa-review-20261028.md).
+- Confirmed from source/document review: current UI uses SMS OTP for all roles; no separate owner email/password + TOTP routes are present; AuthProvider/ProtectedRoute do not enforce MFA assurance level; existing reviewed database guard helpers do not check JWT AAL.
+- Clarified the required authorization matrix for customers, merchants, riders, staff, owner at AAL1/AAL2, revoked admins, sensitive finance permissions, and out-of-scope geography. Added 14 planned negative cases, including direct RPC bypass and recovery paths.
+- Status remains **Yellow / design review only**. These are source and prior-review findings, not successful runtime tests. A full function-by-function authorization inventory is still required before any migration.
+- Runtime tests remain **BLOCKED / NOT RUN** because no isolated staging project was available in the prior read-only discovery. Do not run probes against the shared/live project.
+- No code, SQL, grants, RLS policies, Auth settings, accounts, or data changed. No PR merged; PR #5 remains draft.
+- Next: finish the owner/admin function call-path inventory, define the exact AAL2 enforcement boundary without over-restricting staff permissions, and keep any migration/rollback as draft until isolated staging and explicit approval exist.
+
