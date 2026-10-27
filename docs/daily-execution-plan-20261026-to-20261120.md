@@ -117,3 +117,20 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
 - Read-only Supabase project discovery found only the Dumri project ref `vdmqhgdcfsswinlilwyn` available to this connection; no separate staging project was listed. Therefore all runtime OTP/profile/RLS/RPC tests remain **BLOCKED / NOT RUN**. Do not probe the shared/live project or create/promote/delete accounts to bypass this blocker.
 - Current day-27 assessment: **Yellow overall**. Inventory/build acceptance is evidenced; runtime auth and authorization acceptance is not. No production Supabase/Auth/Storage/permission change, no account/data change, no PR merge, and no Midnight Meals work was performed.
 - Next scheduled deliverable for 2026-10-28: complete the read-only Auth/profile-link review and negative-test plan; keep runtime execution blocked until an isolated staging project is available.
+
+## Daily scorecard — 2026-10-28
+
+- Date and target deliverable: Wednesday 28 October — read-only Auth/profile-link review and negative-test plan.
+- Status: **Yellow**. Source review and negative-test expectations are documented; runtime tests are **BLOCKED / NOT RUN** because an isolated staging project is not available to this connection.
+- Evidence: [Auth/Profile Link Review — 2026-10-28](auth-profile-link-review-20261028.md); prior database/function findings remain in [the 2026-10-26 review](auth-profile-link-review-20261026.md).
+- Findings recorded:
+  - Signup sends client-selected role/name/phone in mutable Auth metadata; profile helper trusts metadata and prefers metadata phone over Auth phone.
+  - The database registration function needs to enforce confirmed/canonical identity and role validation server-side; UI checks are not sufficient.
+  - OTP verification can navigate to dashboard without calling the profile helper if registration route state is incomplete.
+  - ProtectedRoute checks session/phone confirmation but does not itself prove profile existence, role approval, or authorization for every destination; downstream controls require review/tests.
+- Negative-test plan: 12 cases covering unauthenticated registration, unconfirmed phone, phone mismatch, metadata role tampering, admin role rejection, duplicate/concurrent registration, cross-user access, wrong-phone OTP, incomplete route state, existing-profile immutability, pending/rejected/disabled workflows, and duplicate UID linkage.
+- What passed: the source review and expected outcomes are recorded. No runtime test is represented as passing.
+- Blockers: no isolated staging project is available; OTP provider delivery and verification remain unconfirmed. Do not run these cases against the shared/live project or change production settings/data to bypass the blocker.
+- Production impact: no app code, Supabase database/Auth/Storage/grants/policies, accounts, or settings changed. No PR merged; PR #5 remains draft.
+- Next action: obtain an isolated staging environment, verify a fresh disposable OTP account, then run the negative-test matrix with redacted evidence. Keep the SQL hardening proposal draft-only until this gate is satisfied.
+
