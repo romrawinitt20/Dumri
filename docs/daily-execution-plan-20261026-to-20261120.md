@@ -108,3 +108,12 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
 - This updates the evidence state for the 2026-10-27 scorecard only. It does not expand the workflow's coverage: `.github/workflows/ci.yml` still runs install/build only. No OTP, profile-link, route authorization, RLS/RPC, or end-to-end test result is evidenced by this run.
 - Overall status remains **Yellow**. The inventory/build checkpoint is evidenced; runtime Auth/profile and authorization acceptance remains blocked/unverified. Next scheduled deliverable for 2026-10-28 is the read-only Auth/profile-link review, including a negative-test plan for mismatched phone and Auth UID.
 - Safety: no production Supabase/Auth/Storage/permission changes, no account/data changes, no PR merge, and no work on other applications.
+
+
+### Follow-up evidence — 2026-10-27, staging readiness
+
+- The scheduled 2026-10-27 deliverable (source/shared-client inventory) is complete based on the repository evidence above: the Dumri source/call-site inventory, 89 migration version/name pairs, known unknowns, and a successful build-only CI run are documented.
+- Added a repeatable 16-case Auth/profile-link and role-isolation test matrix in `docs/auth-profile-link-test-matrix-20261028.md` on draft PR #5. The matrix is a plan, not a test execution result.
+- Read-only Supabase project discovery found only the Dumri project ref `vdmqhgdcfsswinlilwyn` available to this connection; no separate staging project was listed. Therefore all runtime OTP/profile/RLS/RPC tests remain **BLOCKED / NOT RUN**. Do not probe the shared/live project or create/promote/delete accounts to bypass this blocker.
+- Current day-27 assessment: **Yellow overall**. Inventory/build acceptance is evidenced; runtime auth and authorization acceptance is not. No production Supabase/Auth/Storage/permission change, no account/data change, no PR merge, and no Midnight Meals work was performed.
+- Next scheduled deliverable for 2026-10-28: complete the read-only Auth/profile-link review and negative-test plan; keep runtime execution blocked until an isolated staging project is available.
