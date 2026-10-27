@@ -144,3 +144,11 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
 - No code, SQL, grants, RLS policies, Auth settings, accounts, or data changed. No PR merged; PR #5 remains draft.
 - Next: finish the owner/admin function call-path inventory, define the exact AAL2 enforcement boundary without over-restricting staff permissions, and keep any migration/rollback as draft until isolated staging and explicit approval exist.
 
+### Owner/Admin function inventory — 2026-10-28 follow-up
+
+- Added [Owner/Admin Function Authorization Inventory](owner-admin-function-authorization-inventory-20261028.md) as a read-only classification register for the next implementation gate.
+- Classified the shared guards `fn_assert_owner()`, `fn_assert_admin()`, `fn_assert_admin_permission(text)`, and `fn_is_admin()`; separated owner-only AAL2 enforcement from least-privilege staff permissions and additional finance/geographic scope checks.
+- Recorded the admin/approval/scope migration names from the existing live baseline as inspection clues only. Migration names do not prove the active SQL behavior.
+- Evidence limitation: the repository connector could retrieve the review documents but not the guessed migration SQL paths; code search returned no function definitions in this pass. The exact per-function SQL body, grants, and caller graph therefore remain unverified. The document explicitly labels itself partial rather than claiming the complete inventory is finished.
+- Runtime tests remain **BLOCKED / NOT RUN** pending isolated staging. No SQL was executed and no production code, database, Auth, Storage, grants, policies, accounts, or data were changed. PR #5 remains draft/unmerged.
+- Next action: retrieve exact function definitions and grants through a supported read-only path, then produce the complete SECURITY DEFINER call-path matrix. Do not draft/apply an executable MFA migration until the exact inventory, rollback, and isolated staging tests are reviewed and the owner explicitly approves.
