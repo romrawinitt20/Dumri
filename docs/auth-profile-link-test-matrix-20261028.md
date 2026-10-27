@@ -60,3 +60,11 @@ The current main RPC path passes client-editable `user_metadata` fields to `fn_r
 - Production changes: **None authorized by this plan**.
 
 Do not mark any case PASS without repeatable evidence. Build success alone does not satisfy this matrix.
+
+
+## Environment readiness check — 2026-10-27
+
+- A read-only Supabase project-list check returned one project available to this connection: `Dumri` (project ref `vdmqhgdcfsswinlilwyn`). No separate staging/test project was listed.
+- Treat the available Dumri project as shared/live and **do not run the runtime matrix against it**. This is an environment-readiness finding, not a claim that the app or OTP is broken.
+- Runtime cases A01–A05, P01–P07, and R01–R04 remain **BLOCKED / NOT RUN** until an isolated staging project is available and explicitly identified. Do not create/promote/delete accounts, run SQL/RPC probes, or change Auth/DB/Storage/grants/policies in the only available project to work around this blocker.
+- Next safe action: owner provisions or connects an isolated staging project, then the tester records its project ref (no secrets) and runs the matrix with disposable accounts.
