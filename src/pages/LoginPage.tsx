@@ -3,16 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../auth/AuthProvider";
 
-function normalizeThaiPhone(value: string) {
-  const compact = value.trim().replace(/[\s()-]/g, "");
-  if (compact.startsWith("+")) return compact;
-  if (compact.startsWith("0")) return "+66" + compact.slice(1);
-  if (compact.startsWith("66")) return "+" + compact;
-  return compact;
-}
-
 export default function LoginPage() {
-  const [phoneInput, setPhoneInput] = useState("");
+  const [emailInput, setEmailInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
@@ -25,21 +17,21 @@ export default function LoginPage() {
       setMessage("ยังไม่ได้ตั้งค่า Supabase กรุณากำหนดค่าตามไฟล์ .env.example");
       return;
     }
-    const phone = normalizeThaiPhone(phoneInput);
-    if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
-      setMessage("กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง เช่น 0812345678 หรือ +66812345678");
+    const email = emailInput.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setMessage("กรุณากรอกอีเมลให้ถูกต้อง");
       return;
     }
     setBusy(true);
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        phone,
+        email,
         options: { shouldCreateUser: false },
       });
       if (error) throw error;
-      navigate("/verify-phone", { replace: true, state: { phone, mode: "login" } });
+      navigate("/verify-email", { replace: true, state: { email, mode: "login" } });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "ส่งรหัส OTP ไม่สำเร็จ");
+      setMessage(error instanceof Error ? error.message : "ส่งรหัส OTP ทางอีเมลไม่สำเร็จ");
     } finally {
       setBusy(false);
     }
@@ -50,13 +42,13 @@ export default function LoginPage() {
       <section className="auth-card">
         <div className="brand-mark">D</div>
         <p className="eyebrow">แพลตฟอร์มส่งอาหารที่เป็นธรรม</p>
-        <h1>เข้าสู่ระบบด้วย OTP</h1>
-        <p className="muted">กรอกเบอร์โทรศัพท์ แล้วเราจะส่งรหัสยืนยันทาง SMS</p>
+        <h1>เข้าสู่ระบบด้วยอีเมล</h1>
+        <p className="muted">กรอกอีเมล แล้วเราจะส่งรหัส OTP ไปให้ทางอีเมล</p>
         {!configured && <p className="notice">ยังไม่ได้เชื่อมต่อ Supabase — ตั้งค่าไฟล์ .env ก่อนทดสอบ</p>}
         <form onSubmit={submit} className="form-stack">
-          <label>เบอร์โทรศัพท์มือถือ<input type="tel" autoComplete="tel" inputMode="tel" required maxLength={20} value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)} placeholder="0812345678" /></label>
+          <label>อีเมล<input type="email" autoComplete="email" required maxLength={254} value={emailInput} onChange={(e) => setEmailInput(e.target.value)} placeholder="you@example.com" /></label>
           {message && <p className="error-message" role="alert">{message}</p>}
-          <button type="submit" disabled={busy || !configured}>{busy ? "กำลังส่งรหัส OTP…" : "ส่งรหัส OTP ทาง SMS"}</button>
+          <button type="submit" disabled={busy || !configured}>{busy ? "กำลังส่งรหัส OTP…" : "ส่งรหัส OTP ทางอีเมล"}</button>
         </form>
         <p className="form-footer">ยังไม่มีบัญชี? <Link to="/register">สมัครสมาชิก</Link></p>
       </section>
