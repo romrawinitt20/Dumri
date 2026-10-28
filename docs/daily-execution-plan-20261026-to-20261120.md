@@ -108,3 +108,28 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
 - This updates the evidence state for the 2026-10-27 scorecard only. It does not expand the workflow's coverage: `.github/workflows/ci.yml` still runs install/build only. No OTP, profile-link, route authorization, RLS/RPC, or end-to-end test result is evidenced by this run.
 - Overall status remains **Yellow**. The inventory/build checkpoint is evidenced; runtime Auth/profile and authorization acceptance remains blocked/unverified. Next scheduled deliverable for 2026-10-28 is the read-only Auth/profile-link review, including a negative-test plan for mismatched phone and Auth UID.
 - Safety: no production Supabase/Auth/Storage/permission changes, no account/data changes, no PR merge, and no work on other applications.
+
+
+## Daily scorecard — 2026-10-28
+
+- Date and target deliverable: Wednesday 28 October — Auth/profile-link review, including a negative-test plan for mismatched phone and Auth UID.
+- Status: **Yellow**. The read-only review work has been prepared and documented on draft PR #5, but that documentation is not merged into `main`; runtime acceptance tests remain blocked/not run. This is not a claim that the Auth/profile flow passed.
+- Evidence snapshot:
+  - Main HEAD at the start of this review: [`1162a23478c919910b66896b785812a9f1dc2cd1`](https://github.com/romrawinitt20/Dumri/commit/1162a23478c919910b66896b785812a9f1dc2cd1), commit message `docs: refresh Dumri Oct 27 CI evidence`. Its diff updates this tracking document only.
+  - Effective main CI: [run #40510932200](https://github.com/romrawinitt20/Dumri/actions/runs/40510932200), event `push`, branch `main`, head SHA `1162a23478c919910b66896b785812a9f1dc2cd1`, conclusion `success`. The `build` job completed checkout, Node.js 22 setup, dependency installation, and `npm run build` successfully.
+  - Workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) only installs dependencies and builds. `package.json` has no test script. This run is build evidence only; it is not evidence for OTP, profile linkage, route authorization, RLS/RPC, MFA/AAL2, or end-to-end flows.
+  - Main already contains [`docs/auth-profile-link-review-20261026.md`](auth-profile-link-review-20261026.md) and [`docs/shared-supabase-consumer-inventory-20261026.md`](shared-supabase-consumer-inventory-20261026.md). The new 2026-10-28 source review and manual test matrix are on [draft PR #5](https://github.com/romrawinitt20/Dumri/pull/5), head SHA `80e799e37bd7455d895d794e1d2941bed6d425e2`; PR #5 is open, draft, and unmerged, so these additions are not part of `main`.
+- What actually passed:
+  - The main-branch build workflow passed on SHA `1162a23478c919910b66896b785812a9f1dc2cd1` in run #40510932200.
+  - The prior Auth/profile review and shared-client inventory are present on `main`; the 28 October review has been prepared on the draft documentation branch.
+  - This review made no production Supabase/Auth/Storage/permission/account/data changes and did not merge a PR.
+- Not passed / blocked:
+  - No repeatable SMS/email OTP registration, confirmed-phone-to-profile linkage, mismatched-phone/UID negative test, duplicate-registration test, protected-route role-isolation test, RLS/RPC authorization test, or end-to-end customer/merchant/rider journey is evidenced as executed.
+  - The source/SQL review identifies reliance on client-editable metadata and missing server-side confirmation/canonical-identity checks in the reviewed registration path. Treat this as a high-priority unresolved security/integrity risk until isolated tests and an approved remediation demonstrate otherwise.
+  - No isolated staging environment is available in the inspected evidence; runtime tests against the only shared/live Supabase project were not run. The reported Supabase Dashboard “connection refused” issue also remains unverified by CI.
+- Impact on 20 November 2026 target: **Yellow with schedule risk**. A testable MVP is not yet evidenced. Authentication/profile linkage remains on the critical path; the target is not declared missed at this checkpoint. If this blocker remains by 6 November, follow the plan and reduce scope/reassess rather than weakening security.
+- Next actions:
+  1. On 29 October, continue the read-only owner/staff/area-admin and MFA/AAL2 review; map owner-only versus staff-permission RPCs and bootstrap/recovery risks without changing accounts or production settings.
+  2. Keep PR #5 draft/unmerged until reviewed; use an isolated staging project with disposable identities for positive and negative tests before treating Auth/profile linkage as accepted.
+  3. Keep remediation as a proposal until exact SQL, impact, rollback, cross-consumer impact, and explicit owner approval are available.
+- Scope guardrail: no production changes, no account/data changes, no PR merge, no Midnight Meals work, and no Supabase region change.
