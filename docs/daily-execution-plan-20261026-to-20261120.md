@@ -133,3 +133,31 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
   2. Keep PR #5 draft/unmerged until reviewed; use an isolated staging project with disposable identities for positive and negative tests before treating Auth/profile linkage as accepted.
   3. Keep remediation as a proposal until exact SQL, impact, rollback, cross-consumer impact, and explicit owner approval are available.
 - Scope guardrail: no production changes, no account/data changes, no PR merge, no Midnight Meals work, and no Supabase region change.
+
+
+## Daily scorecard — 2026-10-29
+
+- Date and target deliverable: Thursday 29 October — read-only owner/admin and MFA/AAL2 review; distinguish owner-only from staff permission RPCs and record bootstrap/call-path risks.
+- Status: **Yellow**. The read-only catalog inventory and a first direct-guard/trigger trace are documented on draft PR #5, but the trace is not complete and no runtime authorization/MFA tests were run. The new inventory is on the PR branch, not on `main`; no PR was merged.
+- Evidence snapshot:
+  - Main HEAD before this scorecard update: [`f7f01033285643146dd37a5b2a44cb0cc01fb816`](https://github.com/romrawinitt20/Dumri/commit/f7f01033285643146dd37a5b2a44cb0cc01fb816), which added the 28 October scorecard.
+  - Main build workflow: [run #40685800730](https://github.com/romrawinitt20/Dumri/actions/runs/40685800730) — job `build` completed successfully, including dependency installation and `npm run build`, on the recorded main checkpoint. This is build evidence only.
+  - Effective workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) only installs dependencies and runs `npm run build`; [`package.json`](../package.json) has no test script. No OTP, RLS/RPC authorization, MFA/AAL2, or end-to-end result is evidenced by this CI.
+  - Read-only inventory and follow-up trace are on [draft PR #5](https://github.com/romrawinitt20/Dumri/pull/5), branch `docs/auth-profile-test-matrix-20261028`, head SHA [`d74b79a5c4e523211150e6440e74564d9eb9df29`](https://github.com/romrawinitt20/Dumri/commit/d74b79a5c4e523211150e6440e74564d9eb9df29). The inventory records 95 `public` SECURITY DEFINER functions; all 95 have function-level `search_path`; 84 have explicit `authenticated` EXECUTE grants, 0 explicit `anon` EXECUTE grants, and 95 `service_role` grants. These are catalog observations, not proof of effective authorization.
+  - The same read-only review found 0/95 function bodies with textual AAL2/AAL/auth.jwt checks. This scan does not imply every function needs MFA; trigger functions are not session RPCs. Shared owner/admin guard behavior and four trigger bindings are recorded, but nested/dynamic call paths and data-scope rules remain incomplete.
+  - Security Advisor snapshot recorded in the inventory: 17 RLS-enabled tables without policies (INFO), 84 authenticated-callable SECURITY DEFINER functions (WARN), and leaked-password protection disabled (WARN). These are triage signals, not automatically exploitable findings.
+  - The available commit-specific workflow lookup returned no PR-triggered workflow runs for head SHA `d74b79a5c4e523211150e6440e74564d9eb9df29`; this lookup is limited to PR-triggered runs and is not proof that no other check exists.
+- What actually passed:
+  - Read-only catalog/grant inventory and an initial direct caller/trigger trace were recorded on the draft documentation branch.
+  - The referenced main build job completed successfully.
+  - No function was invoked to test behavior; no production code, database, Auth, Storage, grants, policies, accounts, permissions, or configuration was changed.
+- Not passed / blocked:
+  - Runtime tests for owner AAL1 deny/AAL2 allow, staff least privilege, revoked/inactive admin denial, cross-scope access, direct RPC bypass, RLS, OTP/profile linkage, and end-to-end journeys remain **BLOCKED / NOT RUN**.
+  - Full transitive/dynamic-SQL call-path tracing, effective privilege analysis, and per-function record/geographic scope validation remain incomplete.
+  - No isolated staging project is available in the inspected evidence; do not use the shared/live project for negative authorization tests.
+- Impact on 20 November 2026 target: **Yellow with schedule risk**. A testable MVP is not yet evidenced. Owner/admin authorization and Auth/profile integrity remain foundation gates; if the auth/authorization blocker remains on 6 November, reduce scope and reassess rather than weakening security.
+- Next actions:
+  1. Complete the highest-risk nested caller and table/record/geographic-scope trace, including finance, payment verification, refunds, user verification, and owner-only operations.
+  2. Establish an isolated staging environment with disposable identities, then execute and retain repeatable positive/negative test evidence; do not probe production.
+  3. Keep remediation as a proposal until exact SQL, consumer impact, rollback, staging results, and explicit owner approval are available.
+- Scope guardrail: no production Supabase/Auth/Storage/permission changes, no account/data changes, no PR merge, no Midnight Meals work, and no Supabase region change.
