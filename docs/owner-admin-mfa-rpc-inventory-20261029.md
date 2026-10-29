@@ -287,3 +287,27 @@ References supplied by the advisor:
 - Leaked password protection: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
 These advisor categories are not a verified count of exploitable vulnerabilities. The review must consider intended RPC exposure, function body checks, table grants, and actual call paths. No advisor remediation was applied.
+
+
+## Direct helper-call graph and trigger paths — 2026-10-29
+
+A read-only text scan of the live function definitions found these direct helper edges (textual function-name references; nested behavior and dynamic SQL still need review):
+
+- Owner-only: the six `fn_owner_*` endpoints call `fn_assert_owner()`.
+- Owner-level shared guard: `fn_admin_chart`, `fn_admin_financial_reconciliation`, `fn_admin_set_gp_exclusion`, `fn_admin_stats`, `fn_admin_tax_reserve_change_history`, `fn_admin_set_user_status_raw`, and `fn_admin_verify_user_raw` call `fn_assert_admin()`.
+- Permission boundary: the 15 application functions listed under `fn_assert_admin_permission(text)` call that helper.
+- Owner-level boolean boundary: the 16 functions listed under `fn_is_admin()` call that helper.
+- Wrapper-to-raw: `fn_admin_assign_rider()` calls `fn_admin_assign_rider_raw()`, which then calls `fn_assert_admin()` and `fn_log()`. The raw function lacks an explicit authenticated EXECUTE grant in the catalog snapshot.
+- Audit helper references: privileged and user-workflow endpoints call `fn_log()` for events including payment verification, refunds, user verification/status, GP exclusion, rider assignment, owner expense review, customer cancellation/refund, merchant order status, rider job/status, and payment submission. The catalog snapshot shows no explicit authenticated or anon EXECUTE grant for `fn_log()`; direct helper access is not the same as nested execution inside a SECURITY DEFINER caller.
+- Identity helper references: multiple user-facing and admin finance functions call `fn_my_user_id()`, `fn_my_role()`, or `fn_uid()`. Those helper calls are not substitutes for verifying the specific target record, allowed state transition, and data fields returned.
+
+### SECURITY DEFINER trigger bindings observed
+
+| Table | Trigger | Function | Event |
+|---|---|---|---|
+| `public.orders` | `trg_guard_order_checkout` | `trg_guard_order_checkout()` | BEFORE INSERT |
+| `public.orders` | `trg_guard_rider_delivery_transition` | `trg_guard_rider_delivery_transition()` | BEFORE UPDATE OF status |
+| `public.orders` | `trg_sync_platform_order_finance` | `fn_sync_platform_order_finance()` | AFTER INSERT or relevant financial/order-state update |
+| `public.platform_finance_settings` | `trg_resync_platform_finance_on_tax_change` | `fn_resync_platform_finance_on_tax_change()` | AFTER tax reserve percent changes |
+
+These trigger functions execute as part of table operations and should be reviewed for safe data invariants, fixed search path, and transactional behavior; they should not be treated as ordinary browser-callable owner RPCs. `fn_link_auth_user()` is also a trigger function; `rls_auto_enable()` is an event-trigger function. MFA checks belong at the authenticated owner-operation boundary, not blindly inside background triggers.
