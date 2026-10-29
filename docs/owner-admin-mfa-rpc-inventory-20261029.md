@@ -269,3 +269,21 @@ trg_set_order_gp() | trigger
 - No DDL/DML, code behavior, Auth/Storage settings, grants, policies, accounts, or data changed.
 - No PR merged. Keep PR #5 Draft/unmerged.
 - Do not implement any migration until exact call paths, impact, rollback, staging results, and explicit owner approval are available.
+
+
+## Supabase Security Advisor snapshot — 2026-10-29 (read-only)
+
+The current security advisor returned three categories:
+
+| Advisor | Count | Interpretation / next action |
+|---|---:|---|
+| RLS enabled, no policies | 17 tables | INFO. This can be intentional when tables are accessible only through guarded SECURITY DEFINER RPCs or not exposed. Review table grants, API exposure, and intended data path individually; do not add blanket policies. |
+| Signed-in users can execute SECURITY DEFINER functions | 84 functions | WARN. This matches the explicit authenticated EXECUTE count above. Review each function's direct and nested authorization; revoke or change security mode only when a function is not intended as an authenticated RPC and after impact analysis. |
+| Leaked password protection disabled | 1 Auth setting | WARN. Relevant before introducing the planned owner email/password login. Do not change Auth settings on the shared/live project without a specific approved change plan and verification. |
+
+References supplied by the advisor:
+- RLS policy finding: https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy
+- SECURITY DEFINER execution finding: https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
+- Leaked password protection: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+
+These advisor categories are not a verified count of exploitable vulnerabilities. The review must consider intended RPC exposure, function body checks, table grants, and actual call paths. No advisor remediation was applied.
