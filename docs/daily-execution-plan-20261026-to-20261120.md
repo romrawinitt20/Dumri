@@ -162,3 +162,14 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
 - Status: **Yellow**. The scheduled read-only source review and negative-test plan are complete and now backed by current live SQL definitions/grant observations. Runtime tests remain **BLOCKED / NOT RUN** because no isolated staging project is available. Do not probe the shared/live project with mutation or negative authorization tests.
 - Safety: no SQL mutation/DDL, no production Auth/Storage/grant/policy/account/config changes, no PR merge, and no work on other applications.
 - Next action: continue the planned 2026-10-29 owner/admin MFA and caller inventory, using read-only SQL to enumerate privileged RPCs and their guards; keep all remediation as a draft until isolated staging, exact impact/rollback, and explicit approval are available.
+
+
+### Owner/Admin MFA and SECURITY DEFINER inventory — 2026-10-29
+
+- Completed a read-only live catalog inventory of all 95 `public` SECURITY DEFINER functions, recording exact signatures, function-level search_path presence, explicit EXECUTE grants, and guard-pattern classifications in [Live Owner/Admin MFA and SECURITY DEFINER Inventory](owner-admin-mfa-rpc-inventory-20261029.md).
+- Catalog snapshot: 95/95 have a function-level search_path setting; 84 have explicit authenticated EXECUTE, 0 have explicit anon EXECUTE, and 95 have service_role EXECUTE. These are explicit ACL observations, not a substitute for effective-privilege/call-path validation.
+- A scan of all 95 definitions found 0 textual references to AAL2, an AAL comparison, or auth.jwt(). Trigger/event-trigger functions are not session-bound RPCs, so this is not a claim that all 95 need MFA; it confirms the inspected bodies do not visibly enforce JWT assurance.
+- Confirmed the helper naming risk: fn_assert_admin() and fn_is_admin() enforce active owner-level/all permission, not generic staff-admin status. Owner-only and permission-based RPC groups are now separately enumerated. The owner-only RPC boundary needs server-side AAL2, while staff actions need their own permission and record/geographic scope.
+- Added a prioritized review queue for bodies without a recognized shared guard; those entries are flagged for per-function review, not declared vulnerabilities. No function was executed as a test.
+- Status remains **Yellow**. Runtime Auth/MFA/RPC/RLS tests remain **BLOCKED / NOT RUN** because no isolated staging project is available. No live data/settings/grants/policies/accounts/code changed. PR #5 remains Draft/unmerged.
+- Next gate: complete direct/nested call-site and table/record-scope trace for the highest-risk functions; prepare a migration and rollback proposal only after that inventory and staging setup, then request explicit approval before any implementation.
