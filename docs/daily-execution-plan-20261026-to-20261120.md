@@ -175,3 +175,5 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
 - Next gate: complete direct/nested call-site and table/record-scope trace for the highest-risk functions; prepare a migration and rollback proposal only after that inventory and staging setup, then request explicit approval before any implementation.
 
 - Ran the Supabase Security Advisor read-only. Current snapshot: 17 RLS-enabled tables without policies (INFO), 84 authenticated-callable SECURITY DEFINER functions (WARN), and leaked-password protection disabled (WARN). These are review signals, not automatically exploitable vulnerabilities; no blanket policies/revokes or Auth changes were applied. Relevant remediation links are recorded in the Oct 29 inventory.
+
+- Follow-up call-path pass: traced direct references to the shared owner/admin helpers, identified the `fn_admin_assign_rider → fn_admin_assign_rider_raw → fn_assert_admin/fn_log` wrapper chain, and recorded four SECURITY DEFINER table-trigger bindings. This improves the direct-call map; it does not yet prove every transitive/dynamic-SQL path or every data-scope rule.
