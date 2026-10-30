@@ -43,7 +43,7 @@ The first `start` downloads local service images and may take several minutes. T
 4. Start Vite with `npm run dev -- --host 127.0.0.1`.
 5. Open http://127.0.0.1:5173.
 
-The current app's Auth screens are phone/SMS OTP oriented. Local Auth delivery and OTP behavior must be verified against the local stack output before treating signup/login as passed. The current hosted Email OTP issue is not fixed by this local environment.
+The current app's Auth screens are phone/SMS OTP oriented. This local config includes one synthetic test number: `+66812345678` with fixed OTP `123456`. Use it only against the local stack. It does not send a real SMS. Anyone who knows this test number and code can sign in as that test identity in this local environment, so never copy this test OTP configuration to a hosted project. The current hosted Email OTP issue is not fixed by this local environment.
 
 ## Safe test sequence
 
