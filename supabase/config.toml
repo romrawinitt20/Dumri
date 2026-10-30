@@ -1,5 +1,5 @@
 # Dumri local-only Supabase stack.
-# This file does not link to or modify the hosted Supabase project.
+# This file does not link to or modify the hosted Dumri project.
 project_id = "dumri-local-test"
 
 [api]
@@ -31,3 +31,15 @@ enable_confirmations = false
 [auth.sms]
 enable_signup = true
 enable_confirmations = false
+
+# Local-only fake provider credentials are sufficient for configured test numbers.
+[auth.sms.twilio]
+enabled = true
+account_sid = "local-test-placeholder"
+message_service_sid = "local-test-placeholder"
+auth_token = "local-test-placeholder"
+
+# Use this synthetic number only against the local stack.
+# Anyone with this number/code can authenticate in this disposable local environment.
+[auth.sms.test_otp]
+66812345678 = "123456"
