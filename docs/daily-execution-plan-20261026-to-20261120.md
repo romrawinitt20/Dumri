@@ -190,3 +190,35 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
   3. Obtain an isolated staging database and disposable identities before running positive/negative tests; any production mitigation remains a proposal until exact SQL, cross-consumer impact, rollback, staging evidence, and explicit owner approval are available.
   4. Extend CI with focused automated tests only after a safe test database and repeatable fixtures exist; keep build success separate from security acceptance.
 - Scope guardrail: no production Supabase/Auth/Storage/grant/policy/permission changes, no account/data changes, no PR merge, and no Midnight Meals work.
+
+
+## Daily scorecard — 2026-10-31
+
+- Date and target deliverable: Saturday 31 October — document payment-slip Storage policies, Edge Function presence/behavior, and a role-based security test plan.
+- Status: **Yellow**. The main branch contains a prior read-only Storage policy review and a manual negative-test checklist, but no new 31 October implementation/test artifact is present. The admin-role semantics remain unresolved, no Edge Function source was found in the checked main-branch repository tree, and no Storage/Edge Function runtime test evidence was found. This is partial preparation, not acceptance.
+- Evidence snapshot:
+  - Main HEAD before this scorecard update: [`f2f9416937751621799bac020aaab4b10fd3d1d4`](https://github.com/romrawinitt20/Dumri/commit/f2f9416937751621799bac020aaab4b10fd3d1d4), commit message `docs: add Dumri Oct 30 RLS audit scorecard`, dated 2026-10-30T12:21:52Z. Its only changed file was this daily execution plan.
+  - Latest main workflow at that checkpoint: [run #41054779430](https://github.com/romrawinitt20/Dumri/actions/runs/41054779430), event `push`, branch `main`, head SHA `f2f9416937751621799bac020aaab4b10fd3d1d4`, conclusion `success`. Job `build` completed checkout, Node.js 22 setup, dependency installation, and `npm run build`. This is build evidence only.
+  - Effective workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) has one `build` job; it installs dependencies and runs `npm run build`. [`package.json`](../package.json) has no test script. The recursive main-branch tree contains no test/spec files, no `supabase/functions` directory, and no Edge Function source file. This repository observation does not establish whether any function is deployed outside this repository.
+  - Existing [payment-slip Storage review](payment-slip-storage-policy-review-20261026.md) records a private `payment-slips` bucket, 10 MiB maximum, JPEG/PNG/PDF allowlist, customer path/order-bound INSERT, and SELECT for the user's path or `fn_my_role() = 'admin'`; no UPDATE/DELETE policy was observed. The review explicitly leaves the exact admin-role scope unresolved.
+  - [Storage admin-role follow-up](payment-slip-admin-role-followup-20261026.md) confirms the `admin` enum and `admin_profiles` metadata exist, but the function body for `fn_my_role()` could not be verified; therefore global slip-read access cannot be certified as Super Admin-only.
+  - [Manual Auth/Storage/demo checklist](manual-auth-and-demo-test-checklist.md) enumerates cross-customer read/upload, path tampering, overwrite/delete, invalid-order, MIME/size, and admin-scope tests as required but not yet run. It also says disposable accounts/orders and owner approval are required before creating test records.
+  - Main has no newer commit than the 30 October checkpoint at the start of this review. Open PRs remain draft/unmerged; PR-only material is not counted as main-branch evidence.
+- What actually passed:
+  - Read-only inspection confirmed the main-branch file tree, existing Storage review/checklist, CI definition, package scripts, and latest workflow result.
+  - The latest main build workflow passed on SHA `f2f9416937751621799bac020aaab4b10fd3d1d4` in run #41054779430.
+  - No Storage object, Auth user, production row, policy, grant, permission, or project setting was changed; no PR was merged.
+- Not passed / blocked:
+  - No repeatable Storage allow/deny test was executed with two disposable customers and dummy orders/files.
+  - The `fn_my_role()` body and exact active-owner/staff semantics remain unverified; do not assume every `admin` role is a Super Admin.
+  - No Edge Function source or test was found in the checked main repository. Deployment-side inventory remains unverified.
+  - No automated test suite runs in CI; build success does not validate Storage, Auth, RLS/RPC, or role isolation.
+  - No isolated staging project and approved disposable Storage fixtures are evidenced; do not run negative tests against the shared/live project.
+- Impact on 20 November 2026 target: **Yellow with security/schedule risk**. The target is not declared missed, but Storage authorization and role isolation are not accepted, and the planned 31 October deliverable is only partially evidenced. The 6 November Auth/authorization checkpoint is six days away; if foundation blockers remain then, reduce scope and reassess as required by the plan rather than weakening security.
+- Next actions:
+  1. Establish an isolated staging database/project and disposable customer/admin identities plus dummy orders/files before any write/deny tests; confirm cloud-branch cost or use local Supabase CLI/Docker without changing production.
+  2. Verify the full `fn_my_role()` definition and active admin-level checks through a supported read-only source in staging; map the intended Super Admin versus staff access to payment slips.
+  3. Execute and record the Storage matrix in staging: valid own upload/read; cross-user read/upload denial; malformed or ineligible order path denial; overwrite/delete behavior; MIME/size rejection; and Super Admin versus staff access.
+  4. Inventory deployed Edge Functions separately from repository source. If none exist, record that explicitly; if any exist, inspect their auth checks, secrets handling, CORS, and error paths without invoking production mutations.
+  5. Add automated tests to CI only after a safe test database and repeatable fixtures are available.
+- Scope guardrail: no production Supabase/Auth/Storage/grant/policy/permission changes, no account/data changes, no PR merge, and no Midnight Meals work.
