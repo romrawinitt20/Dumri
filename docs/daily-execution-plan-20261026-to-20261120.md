@@ -258,3 +258,32 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
   4. Add role/status route tests only after server-side authorization and safe staging fixtures are available; test signed-out, unconfirmed, pending, suspended, banned, customer, merchant, rider, staff-admin, and owner-admin cases.
   5. Keep demo order/payout flows clearly labeled as simulations until persistent database behavior, payment simulation, idempotency, and audit evidence exist.
 - Scope guardrail: no production Supabase/Auth/Storage/grant/policy/permission changes, no account/data changes, no PR merge, and no Midnight Meals work.
+
+
+## Daily scorecard — 2026-11-02
+
+- Date and target deliverable: Monday 2 November — Auth/session behavior: review loading, session restore, sign-out, and OTP error handling; acceptance requires a successful build and focused repeatable tests.
+- Status: **Yellow**. Static source inspection confirms that several basic session and UI error-handling paths are present, and the current main build workflow passes. However, the planned focused runtime/automated tests are not present or evidenced, so today's acceptance criteria are only partially met. No application code was changed during this review.
+- Evidence snapshot:
+  - Main HEAD inspected: [`9152c6d59d89b8a3d2e9efec36b1f82f754f8398`](https://github.com/romrawinitt20/Dumri/commit/9152c6d59d89b8a3d2e9efec36b1f82f754f8398), commit message `docs: clarify Dumri architecture scorecard data ownership evidence`, created 2026-11-01T12:46:39Z. Its diff changes this tracking document only; no new main commit was present on 2026-11-02 at review time.
+  - Latest main workflow for that exact SHA: [Dumri CI run #41308089400](https://github.com/romrawinitt20/Dumri/actions/runs/41308089400), event `push`, branch `main`, conclusion `success`. Job `build` completed checkout, Node.js 22 setup, dependency installation, and `npm run build` successfully.
+  - Effective workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) contains only the `build` job; [`package.json`](../package.json) has `build: tsc -b && vite build` but no `test` script. The recursive main tree contains no test/spec files or test directory.
+  - [`src/auth/AuthProvider.tsx`](../src/auth/AuthProvider.tsx) calls `supabase.auth.getSession()`, subscribes to `onAuthStateChange`, maintains an initial loading state, and exposes `signOut()`. [`src/App.tsx`](../src/App.tsx) and [`src/components/ProtectedRoute.tsx`](../src/components/ProtectedRoute.tsx) show loading states and redirect signed-out or unconfirmed sessions.
+  - [`src/pages/LoginPage.tsx`](../src/pages/LoginPage.tsx) and [`src/pages/RegisterPage.tsx`](../src/pages/RegisterPage.tsx) validate phone input, show request errors, and expose busy states. [`src/pages/VerifyPhonePage.tsx`](../src/pages/VerifyPhonePage.tsx) handles OTP verification/resend errors and busy states; [`src/pages/DashboardPage.tsx`](../src/pages/DashboardPage.tsx) catches sign-out errors.
+  - PR #4 (email OTP) and PR #5 (Auth/profile test matrix) remain open Draft PRs and are not part of main. Main continues to use the SMS OTP path.
+- What actually passed:
+  - Static source inspection confirmed the session restore/listener/loading/sign-out code paths and user-visible OTP request/verification error handling described above.
+  - Main build passed on the exact inspected SHA in workflow run #41308089400. This is build/type-check evidence only.
+  - No production Supabase/Auth/Storage/permission, account, or data changes were made; no PR was merged.
+- Not passed / blocked:
+  - No runtime test evidence for session restoration after refresh, sign-out followed by protected-route redirect, OTP success/failure/expiry/resend, network/provider errors, or verification-page refresh was found.
+  - `VerifyPhonePage` depends on transient React Router `location.state` for phone and mode; direct navigation or refresh loses this state and the page asks the user to restart. This remains a source-level limitation, not a runtime test result.
+  - `AuthProvider` logs a `getSession()` error to the console but has no dedicated user-visible session-load error state.
+  - CI does not run unit/integration/E2E tests; the main tree has no test/spec files. No isolated staging test evidence or disposable OTP test identity is recorded.
+- Impact on 20 November 2026 target: **Yellow with rising schedule risk**. Authentication remains a foundation dependency and the 6 November auth/authorization scope gate is four days away. If repeatable Auth/profile/authorization tests and a safe test environment are still unavailable at that gate, reduce MVP scope and reassess the forecast as required by this plan; do not weaken security or test against the shared/live project.
+- Next actions:
+  1. Establish an isolated test target (local Supabase CLI/Docker or an explicitly cost-approved isolated staging project) with disposable identities; do not use production accounts or data.
+  2. Add focused tests for session restore, loading/error behavior, sign-out, protected-route redirects, and OTP success/failure/resend using a controlled test harness; wire them into CI before claiming acceptance.
+  3. Resolve the verification-page state-loss behavior and decide how session-load failures should be surfaced, then verify both with repeatable tests.
+  4. Keep PR #4 and PR #5 draft/unmerged until reviewed and tested against the intended base; do not treat their contents as main functionality.
+- Scope guardrail: no production Supabase/Auth/Storage/grant/RLS/permission changes, no account/data changes, no PR merge, and no Midnight Meals work.
