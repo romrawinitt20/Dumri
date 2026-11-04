@@ -319,3 +319,36 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
   4. Run repeatable allow/deny tests for canonical-phone mismatch, metadata tampering, unconfirmed/unauthenticated callers, admin role, duplicate/concurrent calls, existing-profile preservation, and pending merchant/rider status. Capture database and application results.
   5. Add focused tests to CI only after a safe isolated test harness and disposable fixtures are reproducible. Keep the proposal and PRs draft/unmerged pending owner review.
 - Scope guardrail: no production Supabase/Auth/Storage/grant/policy/permission changes, no account/data changes, no PR merge, and no Midnight Meals work.
+
+
+## Daily scorecard — 2026-11-04
+
+- Date and target deliverable: Wednesday 4 November — protected routes and approval states. Acceptance requires role-specific access for customer/merchant/rider/admin to be tested, and pending/rejected/disabled accounts to be unable to use approved workflows.
+- Status: **Yellow (high schedule risk)**. The current main source provides a single authenticated/phone-confirmed gate around `/dashboard`, but it does not enforce role- or profile-status-specific routes. The planned allow/deny tests are not present in the repository or CI and were not run. This is a source-level review, not runtime acceptance.
+- Evidence snapshot:
+  - Main HEAD at start of review: [`bf255d8ddc235e483f05f8e45fc6811351cf1f7b`](https://github.com/romrawinitt20/Dumri/commit/bf255d8ddc235e483f05f8e45fc6811351cf1f7b), commit message `docs: add Dumri Nov 3 profile-linkage scorecard`, dated 2026-11-03T12:20:18Z. Its only changed file was this daily execution plan; no application source changed in that commit.
+  - Latest main workflow at review time: [Dumri CI run #41634860918](https://github.com/romrawinitt20/Dumri/actions/runs/41634860918), event `push`, branch `main`, exact head SHA `bf255d8ddc235e483f05f8e45fc6811351cf1f7b`, conclusion `success`. Job `build` completed checkout, Node.js 22 setup, dependency installation, and `npm run build`. This is build/type-check evidence only, not role/approval-state test evidence.
+  - Effective workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) contains one `build` job and runs `npm install --no-audit --no-fund` followed by `npm run build`. [`package.json`](../package.json) has `build: tsc -b && vite build` but no `test` script. The recursive `main` tree contains no test/spec files or test directory.
+  - Route map from [`src/App.tsx`](../src/App.tsx): public `/demo` and `/demo/payouts`; `/login`, `/register`, and `/verify-phone`; the only route wrapped in `ProtectedRoute` is `/dashboard`. No distinct customer, merchant, rider, staff-admin, or owner-admin route groups are defined.
+  - [`src/components/ProtectedRoute.tsx`](../src/components/ProtectedRoute.tsx) checks Supabase configuration, loading, signed-in user, and `phone_confirmed_at`; it does not fetch/check the Dumri profile role or account status before rendering its outlet.
+  - [`src/pages/DashboardPage.tsx`](../src/pages/DashboardPage.tsx) calls `fn_my_profile` and displays role/status. Its UI types include roles `customer/merchant/rider/admin` and statuses `pending/active/suspended/banned`. The page explicitly says role display is not authorization; it does not gate separate role workflows. The inspected UI does not model `rejected` or `disabled` states.
+  - [`src/pages/RegisterPage.tsx`](../src/pages/RegisterPage.tsx) permits customer/merchant/rider signup and displays a notice that merchant/rider accounts require review. That notice is not proof that protected workflows are blocked server-side.
+  - Open PRs #4 and #5 remain Draft and unmerged; their content is not part of `main` and is not counted as implementation or test evidence.
+- What actually passed:
+  - Read-only inspection established the current route map, the exact checks in `ProtectedRoute`, the profile fields/statuses displayed by the dashboard, and the CI workflow scope.
+  - The build-only main workflow completed successfully on exact SHA `bf255d8ddc235e483f05f8e45fc6811351cf1f7b` in run #41634860918.
+  - No production Supabase/Auth/Storage/grant/RLS/permission changes, account/data changes, or application source changes were made; no PR was merged and no Midnight Meals work was performed.
+- Not passed / blocked:
+  - No runtime allow/deny tests were executed for signed-out, unconfirmed, customer, merchant, rider, admin, pending, rejected, disabled, suspended, or banned accounts.
+  - No role-specific route tests or server-side workflow authorization tests are present in the checked repository/CI.
+  - Pending merchant/rider approval is communicated in UI text, but the current route guard does not enforce profile status. The actual enforcement of each backend RPC must be verified separately in isolated staging.
+  - `rejected` and `disabled` are acceptance states in today's plan but are not represented in the inspected dashboard status union; the intended persisted status model and resubmission behavior need an explicit owner/product decision rather than an invented mapping.
+  - No isolated staging/local test target or disposable role-based identities are evidenced. No negative tests were run against the shared/live Supabase project.
+- Impact on 20 November 2026 target: **Yellow with high schedule risk**. The 6 November authentication/authorization scope gate is two days away. Role/status enforcement and registration/profile linkage remain unaccepted, while the current CI only proves the app builds. If a safe test target and repeatable auth/route allow-deny evidence are still unavailable at the 6 November gate, reduce MVP scope and reassess the forecast as required by the plan; do not weaken authorization to preserve the date.
+- Next actions:
+  1. Establish an isolated local Supabase CLI/Docker test target or an explicitly cost-approved staging project, with disposable identities for each role/status. Do not use the shared/live production project for negative tests.
+  2. Define and approve the exact persisted meaning of `rejected` and `disabled`, including whether rejected merchant/rider applications may resubmit; do not silently map them to `pending` or `suspended`.
+  3. Build an allow/deny matrix for signed-out, unconfirmed, customer, merchant, rider, staff-admin, owner-admin, pending, active, rejected, disabled, suspended, and banned states. Test both route behavior and server-side RPC authorization in staging.
+  4. Add repeatable route/auth tests to CI only after fixtures and the isolated test target are reproducible; keep build success separate from security acceptance.
+  5. At the 6 November gate, make an explicit scope/forecast decision if the above tests are still blocked.
+- Scope guardrail: no production Supabase/Auth/Storage/grant/RLS/permission changes, no account/data changes, no PR merge, and no Midnight Meals work.
