@@ -352,3 +352,39 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
   4. Add repeatable route/auth tests to CI only after fixtures and the isolated test target are reproducible; keep build success separate from security acceptance.
   5. At the 6 November gate, make an explicit scope/forecast decision if the above tests are still blocked.
 - Scope guardrail: no production Supabase/Auth/Storage/grant/RLS/permission changes, no account/data changes, no PR merge, and no Midnight Meals work.
+
+
+## Daily scorecard — 2026-11-05
+
+- Date and target deliverable: Thursday 5 November — owner/staff admin boundary. Acceptance requires the admin UI and server authorization design to align, owner-only operations to be denied to staff, and MFA/AAL2 gaps to be explicitly gated.
+- Status: **Red (critical auth/authorization gate at risk)**. The design principles are documented, but the acceptance evidence is not present: there is no Admin/Owner/Staff admin page or route in the current app, owner email/password + TOTP is not implemented, the Auth provider/route guard do not evaluate MFA assurance, and no owner-vs-staff allow/deny runtime test or automated test exists. The 6 November scope gate is the next day. This is a schedule/acceptance status, not a claim that an exploit was demonstrated.
+- Evidence snapshot:
+  - Main HEAD at start of review: [`40f83471e8d006a9fe706fc5eb8ef7064c793b2c`](https://github.com/romrawinitt20/Dumri/commit/40f83471e8d006a9fe706fc5eb8ef7064c793b2c), commit message `docs: add Dumri Nov 4 protected-route scorecard`. The commit diff contains only `docs/daily-execution-plan-20261026-to-20261120.md`; no app source changed in that commit. No newer main commit was returned by the recent-commit check.
+  - Latest main workflow at review: [Dumri CI run #41830764989](https://github.com/romrawinitt20/Dumri/actions/runs/41830764989), event `push`, branch `main`, exact head SHA `40f83471e8d006a9fe706fc5eb8ef7064c793b2c`, conclusion `success`. Job `build` completed checkout, Node.js 22 setup, dependency installation, and `npm run build`. This is build/type-check evidence only.
+  - Effective workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) has one `build` job and no unit, integration, auth, RPC, MFA, or E2E test step. [`package.json`](../package.json) defines `build: tsc -b && vite build` and has no `test` script.
+  - Current `src/pages` listing contains Dashboard, Demo, Login, Payout Demo, Register, Verify Email, and Verify Phone pages; it contains no Admin, Owner Admin, or Staff Admin page. `src/components` contains only `ProtectedRoute.tsx`. `src/App.tsx` has no separate admin routes; only `/dashboard` is wrapped by the current auth/phone-confirmation guard.
+  - `src/auth/AuthProvider.tsx` restores the Supabase session and signs out, but has no MFA factor/AAL state or AAL2 gate. `ProtectedRoute.tsx` checks configuration, loading, signed-in user, and `phone_confirmed_at` only.
+  - [`docs/owner-mfa-enforcement-review.md`](owner-mfa-enforcement-review.md) is a read-only review dated 2026-10-26. It records that login uses SMS OTP for all roles, owner email/password + TOTP is not implemented, and the inspected `fn_assert_owner()`, `fn_assert_admin()`, `fn_assert_admin_permission(text)`, and `fn_is_admin()` definitions had no JWT AAL2 check. These are prior read-only findings, not a fresh live-database query today.
+  - [`docs/admin-area-scoped-permissions-design-20261026.md`](admin-area-scoped-permissions-design-20261026.md), [`docs/admin-area-permissions-migration-plan-20261026.md`](admin-area-permissions-migration-plan-20261026.md), and [`docs/admin-area-scope-security-gates-20261026.md`](admin-area-scope-security-gates-20261026.md) describe design and staging gates only; they explicitly do not represent an applied implementation or passed test matrix.
+  - PR #4 (email OTP) and PR #5 (Auth/profile test matrix) remain open, Draft, and unmerged. Neither is counted as main implementation or test evidence.
+  - The `main` branch API reports `protected: false`; CI is not configured as an enforced required status check.
+- What actually passed:
+  - Read-only repository inspection confirmed the absence of admin UI/routes in the current source tree and identified the current Auth/ProtectedRoute checks.
+  - The documented admin design separates Super Admin management, functional permissions, geographic scope, and sensitive finance/document permissions; this is design evidence only.
+  - Build-only CI completed successfully on exact main SHA `40f83471e8d006a9fe706fc5eb8ef7064c793b2c` in run #41830764989.
+  - No production Supabase/Auth/Storage/grant/RLS/permission change, account/data change, PR merge, or Midnight Meals work was performed.
+- Not passed / blocked:
+  - No Admin/Owner/Staff Admin UI or dedicated admin route exists in the inspected main source tree.
+  - Owner email/password login, TOTP enrollment/challenge, backup-factor flow, and AAL2-aware session state are not implemented.
+  - Prior read-only findings show no AAL2 check in the inspected shared owner/admin guards; the complete transitive RPC inventory and runtime owner-vs-staff denial behavior remain unverified in an isolated test target.
+  - No runtime evidence for staff denied from owner-only operations, owner at AAL1 denied, owner at AAL2 allowed, least-privilege staff permissions, inactive/revoked admin denial, or audit logging.
+  - No isolated staging/local database test harness or disposable owner/staff identities is evidenced in the repository; no negative tests were run against the shared/live project.
+  - CI remains build-only and does not enforce tests or a required check on `main`.
+- Impact on 20 November 2026 target: **Red at the 5 November checkpoint for the auth/admin acceptance gate; the 20 November date is at risk, not yet declared impossible.** The 6 November rule in this plan requires a scope downgrade and forecast reassessment if authentication/authorization blockers remain. Only 15 calendar days remain after today; admin/MFA implementation and test evidence cannot be counted as complete based on design documents or build success.
+- Next actions:
+  1. At the 6 November gate, record a formal scope/forecast decision. Do not continue feature expansion while the auth/admin test environment is absent.
+  2. Establish a local Supabase CLI + Docker environment or a separately cost-approved staging project, using synthetic disposable identities only; do not use the shared production project for negative tests.
+  3. In that isolated environment, map every owner-only and staff-permission RPC plus wrapper/caller paths; test staff-denied/owner-AAL1-denied/owner-AAL2-allowed, inactive/revoked admin, and audit outcomes.
+  4. Decide the minimum owner/admin UI required for the testable MVP and implement only after the authorization contract is reviewed; do not treat frontend menu hiding as security.
+  5. Add repeatable auth/admin tests to CI and verify the exact workflow run on the resulting commit before changing the status to Green.
+- Scope guardrail: no production Supabase/Auth/Storage/grant/RLS/permission changes, no account/data changes, no PR merge, and no Midnight Meals work.
