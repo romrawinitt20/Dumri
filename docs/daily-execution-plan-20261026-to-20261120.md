@@ -388,3 +388,38 @@ Scope guardrails: no merge without owner approval; no production DB/Auth/Storage
   4. Decide the minimum owner/admin UI required for the testable MVP and implement only after the authorization contract is reviewed; do not treat frontend menu hiding as security.
   5. Add repeatable auth/admin tests to CI and verify the exact workflow run on the resulting commit before changing the status to Green.
 - Scope guardrail: no production Supabase/Auth/Storage/grant/RLS/permission changes, no account/data changes, no PR merge, and no Midnight Meals work.
+
+## Daily scorecard — 2026-11-06
+
+- Date and target deliverable: Friday 6 November — automated auth/route tests. Acceptance requires CI to cover build, type checks, and repeatable core auth/route tests, with the exact workflow result recorded.
+- Status: **Red (6 November authentication/authorization gate not met; 20 November target at risk)**. The current main branch has no test/spec files, no `test` script, no isolated Supabase test harness, and no auth/route test job. The only workflow job is build. No runtime auth, profile-linkage, route, role, owner/staff, or MFA test was executed. This is a failed acceptance gate, not a claim that a live exploit was demonstrated.
+- Evidence snapshot:
+  - Main HEAD at start of review: [`caf2a0a3799231f10ae2bdf980278fe5f2191c2e`](https://github.com/romrawinitt20/Dumri/commit/caf2a0a3799231f10ae2bdf980278fe5f2191c2e), commit message `docs: add Dumri Nov 5 owner-admin boundary scorecard`, committed 2026-11-05T12:29:25Z. The recent main commit list contains no commit dated 6 November; the Nov 5 commit changed only this execution-plan document.
+  - Latest verified main workflow at review: [Dumri CI run #42027562027](https://github.com/romrawinitt20/Dumri/actions/runs/42027562027), event `push`, branch `main`, exact head SHA `caf2a0a3799231f10ae2bdf980278fe5f2191c2e`, conclusion `success`. Its single `build` job completed checkout, Node.js setup, dependency installation, and `npm run build`. This proves build/type-check completion only; it is not auth or route test evidence.
+  - [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) contains one `build` job and no unit, integration, auth, RPC, MFA, or E2E test step. [`package.json`](../package.json) defines `build: tsc -b && vite build` and has no `test` script.
+  - Recursive main tree at SHA `caf2a0a3799231f10ae2bdf980278fe5f2191c2e` contains 64 entries and no test/spec files or test directory. It has two SQL drafts under `docs/drafts/`, but no applied `supabase/migrations/` directory or isolated test configuration.
+  - [`src/App.tsx`](../src/App.tsx) has public `/demo` and `/demo/payouts`, and only `/dashboard` is wrapped by `ProtectedRoute`; there are no role-specific or admin routes in the current route map.
+  - [`src/components/ProtectedRoute.tsx`](../src/components/ProtectedRoute.tsx) checks Supabase configuration, loading, signed-in user, and `phone_confirmed_at`; it does not check Dumri profile role/status or MFA assurance.
+  - [`src/auth/AuthProvider.tsx`](../src/auth/AuthProvider.tsx) restores the session and signs out but exposes no MFA factor or AAL state. [`src/pages/LoginPage.tsx`](../src/pages/LoginPage.tsx) uses phone SMS OTP; the owner email/password + TOTP flow is not present in this page.
+  - PR #4 (`Use email OTP for Dumri auth testing`) and PR #5 (`isolated Auth/profile-link test matrix`) are still Open / Draft / Unmerged. They are not part of main and are not counted as implementation or executed tests.
+  - GitHub branch API reports `main` is unprotected and required status-check enforcement is off.
+- What actually passed:
+  - Read-only inspection confirmed the current main commit, route map, AuthProvider, ProtectedRoute, LoginPage, workflow definition, package scripts, recursive repository tree, and PR states.
+  - The build-only workflow completed successfully on exact SHA `caf2a0a3799231f10ae2bdf980278fe5f2191c2e` in run #42027562027; all steps in its only `build` job concluded `success`.
+  - No production Supabase/Auth/Storage/grant/RLS/permission changes, account/data changes, PR merge, or Midnight Meals work was performed.
+- Not passed / blocked:
+  - The planned CI auth/route tests are absent; no repeatable test command or fixtures exist in the inspected main tree.
+  - No isolated local Supabase CLI/Docker target or separately approved staging project is evidenced in main. No new disposable OTP identity or post-OTP Auth phone/confirmation inspection was performed.
+  - No runtime evidence for confirmed-phone/profile binding, metadata tampering, unauthenticated registration, duplicate/concurrent profile creation, pending/rejected/disabled route denial, owner-vs-staff authorization, AAL1 denial/AAL2 allowance, or audit behavior.
+  - Build success does not meet the 6 November acceptance criterion. The latest successful workflow is from 5 November and is build-only.
+- Scope/forecast gate:
+  - The plan's 6 November schedule-risk rule is triggered because authentication/authorization blockers remain. **Recommended action: freeze new feature expansion and re-baseline the 20 November MVP around only flows that can be implemented and repeatably tested with synthetic data and simulated payments.** Do not claim the broader role/admin/MFA/security acceptance as complete.
+  - No product-scope change, production setting change, database migration, permission change, or account change was applied in this scorecard. The final MVP inclusion/defer decision and revised forecast remain owner decisions requiring explicit approval.
+- Impact on 20 November 2026 target: **Red / at risk, not declared impossible.** Fourteen calendar days remain after 6 November. The current evidence does not support a claim that the app is a secure testable MVP; schedule recovery depends first on an isolated test target, a narrowed owner-approved scope, and repeatable auth/route acceptance tests.
+- Next actions:
+  1. Freeze feature expansion until the owner approves a scope/forecast re-baseline; keep production launch separate from the testable-MVP target.
+  2. Establish Local Supabase CLI + Docker on a computer or a separately cost-approved staging project. Use synthetic disposable identities only; do not run negative tests against the shared production project.
+  3. Add a minimal reproducible test harness for Auth/profile linkage and protected routes, then add CI steps for focused tests. Keep build and security acceptance as separate checks.
+  4. Execute and capture allow/deny tests for signed-out/unconfirmed users, customer/merchant/rider states, pending/rejected/disabled accounts, staff vs owner, and owner AAL1/AAL2. Include the exact commit SHA, workflow run, and test output.
+  5. Reforecast the remaining customer browse, cart/order, merchant, rider, promotion, simulated payment, commission, COD, and regression scope only after the auth foundation has repeatable test evidence.
+- Scope guardrail: no production Supabase/Auth/Storage/grant/RLS/permission changes, no account/data changes, no PR merge, and no Midnight Meals work.
